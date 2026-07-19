@@ -1,0 +1,76 @@
+import cors from "cors";
+import express from "express";
+import fs from "fs";
+import helmet from "helmet";
+import path from "path";
+import rateLimit from "express-rate-limit";
+import { config } from "./config/env";
+import { startNotificationJobs } from "./jobs/notifications";
+import { errorHandler, notFound } from "./middleware/error";
+import authRoutes from "./routes/auth";
+import costsRoutes from "./routes/costs";
+import invitesRoutes from "./routes/invites";
+import objectsRoutes from "./routes/objects";
+import reportsRoutes from "./routes/reports";
+import todosRoutes from "./routes/todos";
+import uploadsRoutes from "./routes/uploads";
+import usersRoutes from "./routes/users";
+
+const app = express();
+
+if (!fs.existsSync(config.uploadDir)) {
+  fs.mkdirSync(config.uploadDir, { recursive: true });
+}
+
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+
+app.get("/health", (_req, res) => {
+  res.json({ ok: true, service: "cokeep-api" });
+});
+
+app.use("/uploads", express.static(path.resolve(config.uploadDir)));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/objects", objectsRoutes);
+app.use("/api/invites", invitesRoutes);
+app.use("/api", todosRoutes);
+app.use("/api", costsRoutes);
+app.use("/api", reportsRoutes);
+app.use("/api/uploads", uploadsRoutes);
+
+/** Simple HTML fallback for password reset when opened in a browser. */
+app.get("/reset-password", (req, res) => {
+  const token = typeof req.query.token === "string" ? req.query.token : "";
+  const deepLink = `${config.deepLinkScheme}://reset-password?token=${encodeURIComponent(token)}`;
+  res.type("html").send(`<!doctype html>
+<html><head><meta charset="utf-8"><title>CoKeep Reset</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui;max-width:28rem;margin:3rem auto;padding:1rem;line-height:1.5}
+a{color:#0B5FFF}</style></head>
+<body>
+<h1>Reset password</h1>
+<p>Open this link in the CoKeep app to choose a new password.</p>
+<p><a href="${deepLink}">Open CoKeep</a></p>
+</body></html>`);
+});
+
+app.use(notFound);
+app.use(errorHandler);
+
+app.listen(config.port, () => {
+  console.log(`CoKeep API listening on :${config.port}`);
+  startNotificationJobs();
+});
+
+export default app;

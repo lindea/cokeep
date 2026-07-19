@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cokeep-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cokeep
+      POSTGRES_PASSWORD: cokeep
+      POSTGRES_DB: cokeep
+    ports:
+      - "5432:5432"
+    volumes:
+      - cokeep_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cokeep -d cokeep"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cokeep_pg_data:

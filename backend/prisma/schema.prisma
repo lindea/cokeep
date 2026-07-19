@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ObjectTemplate {
+  CABIN
+  GENERIC
+}
+
+enum MembershipRole {
+  OWNER
+  MEMBER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  LEFT
+  REMOVED
+  PENDING
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum ScheduleType {
+  ONE_OFF
+  RECURRING
+}
+
+enum RecurrenceInterval {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum NotificationType {
+  INVITE
+  TODO_DUE_SOON
+  TODO_OVERDUE
+  GENERAL
+}
+
+model User {
+  id           String   @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String   @unique
+  phoneE164    String   @unique
+  countryCode  String
+  passwordHash String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships          ObjectMembership[]
+  createdObjects       SharedObject[]       @relation("ObjectCreator")
+  assignedTodos        TodoItem[]           @relation("TodoAssignee")
+  completedTodos       TodoItem[]           @relation("TodoCompleter")
+  workLogs             WorkLog[]
+  costs                Cost[]
+  sentInvites          Invite[]             @relation("InviteSender")
+  receivedInvites      Invite[]             @relation("InviteRecipient")
+  deviceTokens         DeviceToken[]
+  passwordResetTokens  PasswordResetToken[]
+  notifications        Notification[]
+
+  @@index([phoneE164])
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("ios")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model SharedObject {
+  id          String         @id @default(uuid())
+  name        String
+  template    ObjectTemplate @default(GENERIC)
+  imageUrl    String?
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  createdBy  User               @relation("ObjectCreator", fields: [createdById], references: [id])
+  members    ObjectMembership[]
+  todoLists  TodoList[]
+  costs      Cost[]
+  invites    Invite[]
+
+  @@index([createdById])
+}
+
+model ObjectMembership {
+  id        String           @id @default(uuid())
+  objectId  String
+  userId    String
+  role      MembershipRole   @default(MEMBER)
+  status    MembershipStatus @default(ACTIVE)
+  joinedAt  DateTime         @default(now())
+  leftAt    DateTime?
+  updatedAt DateTime         @updatedAt
+
+  object SharedObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([objectId, userId])
+  @@index([userId])
+}
+
+model Invite {
+  id              String       @id @default(uuid())
+  objectId        String
+  invitedById     String
+  phoneE164       String
+  recipientUserId String?
+  token           String       @unique @default(uuid())
+  status          InviteStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+  respondedAt     DateTime?
+
+  object        SharedObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  invitedBy     User         @relation("InviteSender", fields: [invitedById], references: [id])
+  recipientUser User?        @relation("InviteRecipient", fields: [recipientUserId], references: [id])
+
+  @@index([phoneE164])
+  @@index([token])
+  @@index([objectId])
+}
+
+model TodoList {
+  id        String   @id @default(uuid())
+  objectId  String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  object SharedObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  items  TodoItem[]
+
+  @@index([objectId])
+}
+
+model TodoItem {
+  id               String              @id @default(uuid())
+  listId           String
+  name             String
+  description      String?
+  scheduleType     ScheduleType        @default(ONE_OFF)
+  dueDate          DateTime?
+  recurrence       RecurrenceInterval?
+  assigneeId       String?
+  isDone           Boolean             @default(false)
+  completedAt      DateTime?
+  completedById    String?
+  dueSoonNotified  Boolean             @default(false)
+  overdueNotified  Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  list        TodoList  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee    User?     @relation("TodoAssignee", fields: [assigneeId], references: [id])
+  completedBy User?     @relation("TodoCompleter", fields: [completedById], references: [id])
+  workLogs    WorkLog[]
+  costs       Cost[]
+
+  @@index([listId])
+  @@index([assigneeId])
+  @@index([dueDate])
+  @@index([isDone])
+}
+
+model WorkLog {
+  id         String   @id @default(uuid())
+  todoItemId String
+  userId     String
+  startedAt  DateTime
+  endedAt    DateTime
+  note       String?
+  createdAt  DateTime @default(now())
+
+  todoItem TodoItem @relation(fields: [todoItemId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([todoItemId])
+  @@index([userId])
+  @@index([startedAt])
+}
+
+model Cost {
+  id           String   @id @default(uuid())
+  objectId     String
+  userId       String
+  amountCents  Int
+  currency     String   @default("NOK")
+  description  String?
+  receiptUrl   String?
+  todoItemId   String?
+  spentAt      DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  object   SharedObject @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  todoItem TodoItem?    @relation(fields: [todoItemId], references: [id], onDelete: SetNull)
+
+  @@index([objectId])
+  @@index([userId])
+  @@index([spentAt])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
