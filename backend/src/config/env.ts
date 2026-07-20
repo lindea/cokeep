@@ -22,6 +22,14 @@ export const config = {
   appStoreUrl: process.env.APP_STORE_URL ?? "https://apps.apple.com/app/cokeep",
   uploadDir: path.resolve(process.env.UPLOAD_DIR ?? "./uploads"),
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB ?? 10),
+  s3: {
+    bucket: process.env.AWS_S3_BUCKET || "",
+    region: process.env.AWS_S3_REGION || process.env.AWS_REGION || "",
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    /** Optional CDN or custom base, e.g. https://cdn.example.com — defaults to S3 virtual-hosted URL */
+    publicBaseUrl: process.env.AWS_S3_PUBLIC_BASE_URL || "",
+  },
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT ?? 587),

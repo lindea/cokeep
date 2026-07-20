@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import { config } from "./config/env";
 import { startNotificationJobs } from "./jobs/notifications";
 import { initPushService } from "./services/push";
+import { isS3Configured } from "./services/s3";
 import { errorHandler, notFound } from "./middleware/error";
 import authRoutes from "./routes/auth";
 import costsRoutes from "./routes/costs";
@@ -70,6 +71,11 @@ app.use(notFound);
 app.use(errorHandler);
 
 initPushService();
+if (isS3Configured()) {
+  console.log(`[uploads] S3 enabled (bucket=${process.env.AWS_S3_BUCKET}, region=${process.env.AWS_S3_REGION || process.env.AWS_REGION})`);
+} else {
+  console.log("[uploads] Using local disk (set AWS_S3_* to enable S3)");
+}
 
 app.listen(config.port, () => {
   console.log(`CoKeep API listening on :${config.port}`);
