@@ -10,10 +10,10 @@ struct RootView: View {
                 SplashView()
             } else if let gate = launch.gate {
                 switch gate {
-                case .forceUpdate(let cfg):
-                    LaunchMessageView(config: cfg, isForceUpdate: true)
-                case .message(let cfg):
-                    LaunchMessageView(config: cfg, isForceUpdate: false) {
+                case .forceUpdate(let msg):
+                    LaunchMessageView(message: msg, isForceUpdate: true)
+                case .message(let msg):
+                    LaunchMessageView(message: msg, isForceUpdate: false) {
                         launch.acknowledgeMessage()
                     }
                 }

@@ -3,7 +3,7 @@ import UIKit
 
 /// Full-screen launch splash for important messages and optional force-update.
 struct LaunchMessageView: View {
-    let config: AppLaunchConfig
+    let message: AppLaunchMessage
     var isForceUpdate: Bool
     var onContinue: (() -> Void)?
 
@@ -19,13 +19,13 @@ struct LaunchMessageView: View {
                             .foregroundStyle(Theme.ink)
                             .padding(.bottom, 4)
 
-                        if !config.title.isEmpty {
-                            Text(config.title)
+                        if !message.title.isEmpty {
+                            Text(message.title)
                                 .font(.system(.title2, design: .rounded).weight(.semibold))
                                 .foregroundStyle(Theme.ink)
                         }
 
-                        MarkdownBody(markdown: config.bodyMarkdown)
+                        MarkdownBody(markdown: message.bodyMarkdown)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.horizontal, 24)
@@ -64,7 +64,7 @@ struct LaunchMessageView: View {
     }
 
     private func openUpdateURL() {
-        let raw = config.updateUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let raw = message.updateUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard let url = URL(string: raw), !raw.isEmpty else { return }
         UIApplication.shared.open(url)
     }

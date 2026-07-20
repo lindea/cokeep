@@ -192,14 +192,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		F5A6B7C8D9EA0B3C4D5E6F71 /* Launch */ = {
-			isa = PBXGroup;
-			children = (
-				F4A5B6C7D8E90A2B3C4D5E70 /* LaunchMessageView.swift */,
-			);
-			path = Launch;
-			sourceTree = "<group>";
-		};
 		D9E8F780F55947DB99A28A36 /* CoKeep */ = {
 			isa = PBXGroup;
 			children = (
@@ -222,6 +214,14 @@
 				11D8763CFCC64B01B17F6EB5 /* Localizable.strings */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		F5A6B7C8D9EA0B3C4D5E6F71 /* Launch */ = {
+			isa = PBXGroup;
+			children = (
+				F4A5B6C7D8E90A2B3C4D5E70 /* LaunchMessageView.swift */,
+			);
+			path = Launch;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -336,7 +336,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;
@@ -381,7 +381,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;

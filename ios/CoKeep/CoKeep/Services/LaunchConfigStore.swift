@@ -1,16 +1,29 @@
 import Foundation
 import Combine
 
-/// Remote launch splash / force-update config from `GET /api/app/launch-config`.
-struct AppLaunchConfig: Codable, Equatable {
+enum LaunchVersionOp: String, Codable, Equatable {
+    case ANY, EQ, LT, LTE, GT, GTE, BETWEEN
+}
+
+/// One remote launch splash / force-update message.
+struct AppLaunchMessage: Codable, Equatable, Identifiable {
+    let id: String
     var enabled: Bool
     var title: String
     var bodyMarkdown: String
     var blocking: Bool
     var forceUpdate: Bool
-    var minIosVersion: String?
+    var versionOp: LaunchVersionOp
+    var versionA: String?
+    var versionB: String?
     var updateUrl: String?
+    var sortOrder: Int
     var updatedAt: String
+}
+
+private struct LaunchMessagesResponse: Codable {
+    let messages: [AppLaunchMessage]
+    let defaultUpdateUrl: String?
 }
 
 @MainActor
@@ -21,62 +34,94 @@ final class LaunchConfigStore: ObservableObject {
     /// When set, the splash (or force-update) gate is active.
     @Published private(set) var gate: Gate?
 
-    private let dismissedKey = "cokeep.launchMessage.dismissedUpdatedAt"
+    private var queue: [AppLaunchMessage] = []
+    private let dismissedKey = "cokeep.launchMessage.dismissedById"
 
     enum Gate: Equatable {
-        case forceUpdate(AppLaunchConfig)
-        case message(AppLaunchConfig)
+        case forceUpdate(AppLaunchMessage)
+        case message(AppLaunchMessage)
     }
 
     func checkOnLaunch() async {
         isChecking = true
         defer { isChecking = false }
 
+        let installed = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+
         do {
-            let cfg: AppLaunchConfig = try await APIClient.shared.request(
+            let response: LaunchMessagesResponse = try await APIClient.shared.request(
                 "GET",
-                path: "api/app/launch-config",
+                path: "api/app/launch-messages",
+                query: [URLQueryItem(name: "iosVersion", value: installed)],
                 authorized: false
             )
-            gate = resolveGate(cfg)
+            queue = Self.applicableMessages(response.messages, installed: installed)
+            presentNext()
         } catch {
             // Fail open: do not block the app if the config endpoint is unreachable.
+            queue = []
             gate = nil
         }
     }
 
     func acknowledgeMessage() {
-        guard case .message(let cfg) = gate else { return }
-        if !cfg.blocking {
-            UserDefaults.standard.set(cfg.updatedAt, forKey: dismissedKey)
+        guard case .message(let msg) = gate else { return }
+        if !msg.blocking {
+            markDismissed(msg)
+        }
+        if !queue.isEmpty {
+            queue.removeFirst()
+        }
+        presentNext()
+    }
+
+    private func presentNext() {
+        while let next = queue.first {
+            if next.forceUpdate {
+                gate = .forceUpdate(next)
+                return
+            }
+            let hasContent = !next.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !next.bodyMarkdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if !hasContent {
+                queue.removeFirst()
+                continue
+            }
+            if !next.blocking, isDismissed(next) {
+                queue.removeFirst()
+                continue
+            }
+            gate = .message(next)
+            return
         }
         gate = nil
     }
 
-    private func resolveGate(_ cfg: AppLaunchConfig) -> Gate? {
-        let installed = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+    private static func applicableMessages(
+        _ messages: [AppLaunchMessage],
+        installed: String
+    ) -> [AppLaunchMessage] {
+        messages
+            .filter { $0.enabled && AppVersion.matches(installed, op: $0.versionOp, a: $0.versionA, b: $0.versionB) }
+            .sorted { lhs, rhs in
+                if lhs.forceUpdate != rhs.forceUpdate { return lhs.forceUpdate && !rhs.forceUpdate }
+                if lhs.sortOrder != rhs.sortOrder { return lhs.sortOrder < rhs.sortOrder }
+                return lhs.updatedAt > rhs.updatedAt
+            }
+    }
 
-        if cfg.forceUpdate,
-           let min = cfg.minIosVersion?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !min.isEmpty,
-           AppVersion.compare(installed, min) == .orderedAscending {
-            return .forceUpdate(cfg)
-        }
+    private func dismissedMap() -> [String: String] {
+        (UserDefaults.standard.dictionary(forKey: dismissedKey) as? [String: String]) ?? [:]
+    }
 
-        guard cfg.enabled else { return nil }
-        let hasContent = !cfg.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            || !cfg.bodyMarkdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        guard hasContent else { return nil }
+    private func isDismissed(_ msg: AppLaunchMessage) -> Bool {
+        dismissedMap()[msg.id] == msg.updatedAt
+    }
 
-        if cfg.blocking {
-            return .message(cfg)
-        }
-
-        let dismissed = UserDefaults.standard.string(forKey: dismissedKey)
-        if dismissed == cfg.updatedAt {
-            return nil
-        }
-        return .message(cfg)
+    private func markDismissed(_ msg: AppLaunchMessage) {
+        var map = dismissedMap()
+        map[msg.id] = msg.updatedAt
+        UserDefaults.standard.set(map, forKey: dismissedKey)
     }
 }
 
@@ -93,5 +138,34 @@ enum AppVersion {
             if x > y { return .orderedDescending }
         }
         return .orderedSame
+    }
+
+    static func matches(
+        _ installed: String,
+        op: LaunchVersionOp,
+        a: String?,
+        b: String?
+    ) -> Bool {
+        let versionA = a?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let versionB = b?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        switch op {
+        case .ANY:
+            return true
+        case .EQ:
+            return !versionA.isEmpty && compare(installed, versionA) == .orderedSame
+        case .LT:
+            return !versionA.isEmpty && compare(installed, versionA) == .orderedAscending
+        case .LTE:
+            return !versionA.isEmpty && compare(installed, versionA) != .orderedDescending
+        case .GT:
+            return !versionA.isEmpty && compare(installed, versionA) == .orderedDescending
+        case .GTE:
+            return !versionA.isEmpty && compare(installed, versionA) != .orderedAscending
+        case .BETWEEN:
+            return !versionA.isEmpty
+                && !versionB.isEmpty
+                && compare(installed, versionA) != .orderedAscending
+                && compare(installed, versionB) != .orderedDescending
+        }
     }
 }

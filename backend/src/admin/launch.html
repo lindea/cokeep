@@ -3,14 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CoKeep Admin — Launch message</title>
+  <title>CoKeep Admin — Launch messages</title>
   <style>
     :root {
       --ink: #172924;
       --muted: #596b63;
       --accent: #1f6b5c;
       --accent-soft: #c7e6dc;
-      --warm: #b8732e;
       --danger: #b2382e;
       --bg: #edf4f1;
       --card: #ffffff;
@@ -27,7 +26,7 @@
       color: var(--ink);
       min-height: 100vh;
     }
-    .wrap { max-width: 52rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    .wrap { max-width: 58rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
     h1 { font-size: 1.85rem; font-weight: 600; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
     .sub { color: var(--muted); margin: 0 0 1.75rem; font-family: system-ui, sans-serif; font-size: 0.95rem; }
     .panel {
@@ -36,6 +35,7 @@
       border-radius: 16px;
       padding: 1.5rem;
       box-shadow: 0 12px 40px rgba(23, 41, 36, 0.06);
+      margin-bottom: 1rem;
     }
     label {
       display: block;
@@ -47,7 +47,7 @@
       color: var(--muted);
       margin: 1rem 0 0.4rem;
     }
-    input[type="text"], input[type="password"], textarea {
+    input[type="text"], input[type="password"], input[type="number"], textarea, select {
       width: 100%;
       padding: 0.7rem 0.85rem;
       border: 1px solid var(--border);
@@ -57,7 +57,7 @@
       background: #fbfdfc;
       color: var(--ink);
     }
-    textarea { min-height: 11rem; resize: vertical; line-height: 1.45; }
+    textarea { min-height: 9rem; resize: vertical; line-height: 1.45; }
     .row { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 1rem; }
     .check {
       display: flex; align-items: center; gap: 0.55rem;
@@ -77,6 +77,7 @@
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-secondary { background: var(--accent-soft); color: var(--accent); }
     .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-danger { background: #f5e0de; color: var(--danger); }
     .msg { font-family: system-ui, sans-serif; font-size: 0.9rem; margin-top: 1rem; }
     .msg.ok { color: var(--accent); }
     .msg.err { color: var(--danger); }
@@ -94,15 +95,36 @@
     .preview ul { padding-left: 1.2rem; }
     .hidden { display: none !important; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+    .grid-3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1rem; }
+    @media (max-width: 720px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
     .topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+    .list-item {
+      display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--border);
+      font-family: system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item.active { background: #f4f9f7; margin: 0 -0.75rem; padding-left: 0.75rem; padding-right: 0.75rem; border-radius: 10px; }
+    .list-item .meta { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+    .badge {
+      display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em;
+      text-transform: uppercase; padding: 0.2rem 0.45rem; border-radius: 6px;
+      background: var(--accent-soft); color: var(--accent); margin-right: 0.35rem;
+    }
+    .badge.off { background: #eee; color: var(--muted); }
+    .badge.force { background: #f5e0de; color: var(--danger); }
+    .hint { font-family: system-ui, sans-serif; font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div id="login-view" class="panel">
       <h1>CoKeep admin</h1>
-      <p class="sub">Sign in to manage the launch splash and force-update settings.</p>
+      <p class="sub">Sign in to manage launch splash messages and force-update rules.</p>
       <label for="username">Username</label>
       <input id="username" type="text" autocomplete="username" />
       <label for="password">Password</label>
@@ -116,25 +138,60 @@
     <div id="editor-view" class="hidden">
       <div class="topbar">
         <div>
-          <h1>Launch message</h1>
-          <p class="sub">Shown as a rich-text splash when the iOS app starts.</p>
+          <h1>Launch messages</h1>
+          <p class="sub">Multiple Markdown splashes, each targeted by app version.</p>
         </div>
         <button type="button" class="btn-ghost" id="logout-btn">Sign out</button>
       </div>
+
       <div class="panel">
+        <div class="topbar">
+          <strong style="font-family:system-ui">Messages</strong>
+          <button type="button" class="btn-secondary" id="new-btn">New message</button>
+        </div>
+        <div id="message-list"></div>
+        <p id="list-empty" class="hint hidden">No messages yet. Create one to get started.</p>
+      </div>
+
+      <div class="panel" id="form-panel">
+        <h2 id="form-heading" style="margin:0;font-size:1.25rem">New message</h2>
+        <input type="hidden" id="edit-id" value="" />
         <div class="row">
-          <label class="check"><input type="checkbox" id="enabled" /> Enable splash message</label>
-          <label class="check"><input type="checkbox" id="blocking" /> Block app until acknowledged</label>
-          <label class="check"><input type="checkbox" id="forceUpdate" /> Force update when below min version</label>
+          <label class="check"><input type="checkbox" id="enabled" checked /> Enabled</label>
+          <label class="check"><input type="checkbox" id="blocking" /> Block until acknowledged</label>
+          <label class="check"><input type="checkbox" id="forceUpdate" /> Force update (no Continue)</label>
         </div>
         <label for="title">Title</label>
         <input id="title" type="text" maxlength="200" placeholder="Important notice" />
         <label for="body">Body (Markdown)</label>
         <textarea id="body" placeholder="**Bold**, lists, links…"></textarea>
+        <div class="grid-3">
+          <div>
+            <label for="versionOp">Version rule</label>
+            <select id="versionOp">
+              <option value="ANY">All versions</option>
+              <option value="EQ">Equal to (=)</option>
+              <option value="LT">Less than (&lt;)</option>
+              <option value="LTE">Less or equal (≤)</option>
+              <option value="GT">Greater than (&gt;)</option>
+              <option value="GTE">Greater or equal (≥)</option>
+              <option value="BETWEEN">Between (inclusive)</option>
+            </select>
+          </div>
+          <div>
+            <label for="versionA" id="versionA-label">Version</label>
+            <input id="versionA" type="text" placeholder="e.g. 1.2.0" />
+          </div>
+          <div id="versionB-wrap" class="hidden">
+            <label for="versionB">Upper version</label>
+            <input id="versionB" type="text" placeholder="e.g. 1.9.9" />
+          </div>
+        </div>
+        <p class="hint" id="version-hint">Shown to every installed version.</p>
         <div class="grid-2">
           <div>
-            <label for="minIosVersion">Minimum iOS app version</label>
-            <input id="minIosVersion" type="text" placeholder="e.g. 1.1.0" />
+            <label for="sortOrder">Priority (lower = first)</label>
+            <input id="sortOrder" type="number" min="0" max="9999" value="0" />
           </div>
           <div>
             <label for="updateUrl">Update URL (App Store)</label>
@@ -144,6 +201,7 @@
         <div class="actions">
           <button type="button" class="btn-primary" id="save-btn">Save</button>
           <button type="button" class="btn-secondary" id="preview-btn">Refresh preview</button>
+          <button type="button" class="btn-danger hidden" id="delete-btn">Delete</button>
         </div>
         <p id="save-msg" class="msg"></p>
         <div class="preview" id="preview"><em>Preview</em></div>
@@ -153,6 +211,7 @@
   <script>
     const TOKEN_KEY = "cokeep.adminToken";
     const $ = (id) => document.getElementById(id);
+    let messages = [];
 
     function token() { return localStorage.getItem(TOKEN_KEY); }
     function setToken(t) {
@@ -170,7 +229,13 @@
         body: body ? JSON.stringify(body) : undefined,
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+      if (!res.ok) {
+        const detail = data.details?.formErrors?.join?.(", ")
+          || (data.details?.fieldErrors && Object.values(data.details.fieldErrors).flat().join(", "))
+          || data.error
+          || ("HTTP " + res.status);
+        throw new Error(detail);
+      }
       return data;
     }
 
@@ -186,27 +251,124 @@
       html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
       html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => "<ul>" + m + "</ul>");
       html = html.replace(/\n\n/g, "</p><p>");
-      html = "<p>" + html + "</p>";
-      return html;
+      return "<p>" + html + "</p>";
     }
 
-    function fillForm(cfg) {
-      $("enabled").checked = !!cfg.enabled;
-      $("blocking").checked = !!cfg.blocking;
-      $("forceUpdate").checked = !!cfg.forceUpdate;
-      $("title").value = cfg.title || "";
-      $("body").value = cfg.bodyMarkdown || "";
-      $("minIosVersion").value = cfg.minIosVersion || "";
-      $("updateUrl").value = cfg.updateUrl || "";
+    function versionLabel(m) {
+      switch (m.versionOp) {
+        case "ANY": return "all versions";
+        case "EQ": return "= " + m.versionA;
+        case "LT": return "< " + m.versionA;
+        case "LTE": return "≤ " + m.versionA;
+        case "GT": return "> " + m.versionA;
+        case "GTE": return "≥ " + m.versionA;
+        case "BETWEEN": return m.versionA + " … " + m.versionB;
+        default: return m.versionOp;
+      }
+    }
+
+    function updateVersionUi() {
+      const op = $("versionOp").value;
+      const needsA = op !== "ANY";
+      const needsB = op === "BETWEEN";
+      $("versionA").parentElement.classList.toggle("hidden", !needsA && !needsB);
+      if (!needsA) $("versionA").parentElement.classList.add("hidden");
+      else $("versionA").parentElement.classList.remove("hidden");
+      $("versionB-wrap").classList.toggle("hidden", !needsB);
+      $("versionA-label").textContent = needsB ? "Lower version" : "Version";
+      const hints = {
+        ANY: "Shown to every installed version.",
+        EQ: "Only the exact version (e.g. 1.2.0).",
+        LT: "Installed version is less than the target.",
+        LTE: "Installed version is less than or equal to the target.",
+        GT: "Installed version is greater than the target.",
+        GTE: "Installed version is greater than or equal to the target.",
+        BETWEEN: "Inclusive range between lower and upper version.",
+      };
+      $("version-hint").textContent = hints[op] || "";
+    }
+
+    function renderList() {
+      const list = $("message-list");
+      const empty = $("list-empty");
+      list.innerHTML = "";
+      empty.classList.toggle("hidden", messages.length > 0);
+      const activeId = $("edit-id").value;
+      messages.forEach((m) => {
+        const el = document.createElement("div");
+        el.className = "list-item" + (m.id === activeId ? " active" : "");
+        el.innerHTML =
+          "<div><div>" +
+          (m.enabled ? '<span class="badge">On</span>' : '<span class="badge off">Off</span>') +
+          (m.forceUpdate ? '<span class="badge force">Force update</span>' : "") +
+          (m.blocking ? '<span class="badge">Blocking</span>' : "") +
+          "<strong>" + (m.title || "(untitled)") + "</strong></div>" +
+          '<div class="meta">' + versionLabel(m) + " · priority " + m.sortOrder + "</div></div>";
+        el.onclick = () => fillForm(m);
+        list.appendChild(el);
+      });
+    }
+
+    function clearForm() {
+      $("edit-id").value = "";
+      $("form-heading").textContent = "New message";
+      $("enabled").checked = true;
+      $("blocking").checked = false;
+      $("forceUpdate").checked = false;
+      $("title").value = "";
+      $("body").value = "";
+      $("versionOp").value = "ANY";
+      $("versionA").value = "";
+      $("versionB").value = "";
+      $("sortOrder").value = "0";
+      $("updateUrl").value = "";
+      $("delete-btn").classList.add("hidden");
+      $("save-msg").textContent = "";
+      updateVersionUi();
       renderPreview();
+      renderList();
+    }
+
+    function fillForm(m) {
+      $("edit-id").value = m.id;
+      $("form-heading").textContent = "Edit message";
+      $("enabled").checked = !!m.enabled;
+      $("blocking").checked = !!m.blocking;
+      $("forceUpdate").checked = !!m.forceUpdate;
+      $("title").value = m.title || "";
+      $("body").value = m.bodyMarkdown || "";
+      $("versionOp").value = m.versionOp || "ANY";
+      $("versionA").value = m.versionA || "";
+      $("versionB").value = m.versionB || "";
+      $("sortOrder").value = String(m.sortOrder ?? 0);
+      $("updateUrl").value = m.updateUrl || "";
+      $("delete-btn").classList.remove("hidden");
+      $("save-msg").textContent = "";
+      updateVersionUi();
+      renderPreview();
+      renderList();
+    }
+
+    function formPayload() {
+      return {
+        enabled: $("enabled").checked,
+        blocking: $("blocking").checked,
+        forceUpdate: $("forceUpdate").checked,
+        title: $("title").value,
+        bodyMarkdown: $("body").value,
+        versionOp: $("versionOp").value,
+        versionA: $("versionA").value || null,
+        versionB: $("versionB").value || null,
+        sortOrder: Number($("sortOrder").value || 0),
+        updateUrl: $("updateUrl").value || null,
+      };
     }
 
     function renderPreview() {
       const title = $("title").value.trim();
-      const body = $("body").value;
       $("preview").innerHTML =
         (title ? "<h2>" + title.replace(/</g,"&lt;") + "</h2>" : "") +
-        simpleMarkdown(body);
+        simpleMarkdown($("body").value);
     }
 
     function showEditor(on) {
@@ -214,9 +376,10 @@
       $("editor-view").classList.toggle("hidden", !on);
     }
 
-    async function loadConfig() {
-      const cfg = await api("GET", "/api/app/admin/launch-config");
-      fillForm(cfg);
+    async function loadMessages() {
+      const data = await api("GET", "/api/app/admin/launch-messages");
+      messages = data.messages || [];
+      clearForm();
       showEditor(true);
     }
 
@@ -229,7 +392,7 @@
           password: $("password").value,
         });
         setToken(data.token);
-        await loadConfig();
+        await loadMessages();
       } catch (e) {
         $("login-msg").textContent = e.message;
         $("login-msg").className = "msg err";
@@ -241,7 +404,9 @@
       showEditor(false);
     };
 
+    $("new-btn").onclick = () => clearForm();
     $("preview-btn").onclick = renderPreview;
+    $("versionOp").onchange = updateVersionUi;
     $("body").addEventListener("input", renderPreview);
     $("title").addEventListener("input", renderPreview);
 
@@ -249,15 +414,13 @@
       $("save-msg").textContent = "";
       $("save-msg").className = "msg";
       try {
-        const saved = await api("PUT", "/api/app/admin/launch-config", {
-          enabled: $("enabled").checked,
-          blocking: $("blocking").checked,
-          forceUpdate: $("forceUpdate").checked,
-          title: $("title").value,
-          bodyMarkdown: $("body").value,
-          minIosVersion: $("minIosVersion").value || null,
-          updateUrl: $("updateUrl").value || null,
-        });
+        const id = $("edit-id").value;
+        const payload = formPayload();
+        const saved = id
+          ? await api("PUT", "/api/app/admin/launch-messages/" + id, payload)
+          : await api("POST", "/api/app/admin/launch-messages", payload);
+        const data = await api("GET", "/api/app/admin/launch-messages");
+        messages = data.messages || [];
         fillForm(saved);
         $("save-msg").textContent = "Saved.";
         $("save-msg").className = "msg ok";
@@ -267,8 +430,23 @@
       }
     };
 
+    $("delete-btn").onclick = async () => {
+      const id = $("edit-id").value;
+      if (!id || !confirm("Delete this launch message?")) return;
+      try {
+        await api("DELETE", "/api/app/admin/launch-messages/" + id);
+        await loadMessages();
+        $("save-msg").textContent = "Deleted.";
+        $("save-msg").className = "msg ok";
+      } catch (e) {
+        $("save-msg").textContent = e.message;
+        $("save-msg").className = "msg err";
+      }
+    };
+
+    updateVersionUi();
     if (token()) {
-      loadConfig().catch(() => {
+      loadMessages().catch(() => {
         setToken(null);
         showEditor(false);
       });

@@ -256,19 +256,35 @@ model Notification {
   @@index([userId, createdAt])
 }
 
-/** Singleton-style launch splash / force-update config (always id = "default"). */
-model AppLaunchConfig {
-  id              String   @id @default("default")
-  enabled         Boolean  @default(false)
-  title           String   @default("")
-  /** Markdown body shown on the launch splash. */
-  bodyMarkdown    String   @default("") @db.Text
-  /** If true, user must acknowledge before using the app (while enabled). */
-  blocking        Boolean  @default(false)
-  /** If true and app version < minIosVersion, usage is blocked until update. */
-  forceUpdate     Boolean  @default(false)
-  minIosVersion   String?
-  updateUrl       String?
-  updatedAt       DateTime @updatedAt
-  createdAt       DateTime @default(now())
+enum LaunchVersionOp {
+  ANY
+  EQ
+  LT
+  LTE
+  GT
+  GTE
+  BETWEEN
+}
+
+/** One of potentially many launch splash / force-update messages. */
+model AppLaunchMessage {
+  id            String          @id @default(uuid())
+  enabled       Boolean         @default(true)
+  title         String          @default("")
+  bodyMarkdown  String          @default("") @db.Text
+  blocking      Boolean         @default(false)
+  /** When true, matching clients must update (no Continue). */
+  forceUpdate   Boolean         @default(false)
+  versionOp     LaunchVersionOp @default(ANY)
+  /** Primary version for EQ/LT/LTE/GT/GTE, or lower bound for BETWEEN. */
+  versionA      String?
+  /** Upper bound for BETWEEN (inclusive). */
+  versionB      String?
+  updateUrl     String?
+  /** Lower sortOrder is shown first when multiple messages match. */
+  sortOrder     Int             @default(0)
+  updatedAt     DateTime        @updatedAt
+  createdAt     DateTime        @default(now())
+
+  @@index([enabled, sortOrder])
 }
