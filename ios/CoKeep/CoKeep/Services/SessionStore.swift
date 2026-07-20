@@ -21,6 +21,7 @@ final class SessionStore: ObservableObject {
                 let response: MeResponse = try await APIClient.shared.request("GET", path: "api/auth/me")
                 user = response.user
                 isAuthenticated = true
+                await syncPreferredLanguage()
             } catch {
                 clearSession()
             }
@@ -127,6 +128,24 @@ final class SessionStore: ObservableObject {
         APIClient.shared.authToken = response.token
         user = response.user
         isAuthenticated = true
+        Task { await syncPreferredLanguage() }
+    }
+
+    /** Keeps server push copy in sync with the phone language (en / nb). */
+    private func syncPreferredLanguage() async {
+        struct Body: Encodable {
+            let preferredLanguage: String
+        }
+        do {
+            let response: MeResponse = try await APIClient.shared.request(
+                "PATCH",
+                path: "api/users/me",
+                body: Body(preferredLanguage: L10n.appLanguageCode)
+            )
+            user = response.user
+        } catch {
+            // Non-fatal: device-token registration also syncs language.
+        }
     }
 
     private func clearSession() {

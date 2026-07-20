@@ -10,16 +10,19 @@ import {
 } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { matchesVersionRule, VersionOp } from "../utils/version";
+import { normalizeAppLang } from "../utils/locale";
 
 const router = Router();
 
 const versionOpSchema = z.nativeEnum(LaunchVersionOp);
 
-function publicShape(row: {
+type LaunchMessageRow = {
   id: string;
   enabled: boolean;
-  title: string;
-  bodyMarkdown: string;
+  titleEn: string;
+  bodyMarkdownEn: string;
+  titleNb: string;
+  bodyMarkdownNb: string;
   blocking: boolean;
   forceUpdate: boolean;
   versionOp: LaunchVersionOp;
@@ -29,12 +32,49 @@ function publicShape(row: {
   sortOrder: number;
   updatedAt: Date;
   createdAt: Date;
-}) {
+};
+
+function localizedContent(row: LaunchMessageRow, lang: "en" | "nb") {
+  if (lang === "nb") {
+    return {
+      title: row.titleNb.trim() ? row.titleNb : row.titleEn,
+      bodyMarkdown: row.bodyMarkdownNb.trim() ? row.bodyMarkdownNb : row.bodyMarkdownEn,
+    };
+  }
+  return {
+    title: row.titleEn,
+    bodyMarkdown: row.bodyMarkdownEn,
+  };
+}
+
+function adminShape(row: LaunchMessageRow) {
   return {
     id: row.id,
     enabled: row.enabled,
-    title: row.title,
-    bodyMarkdown: row.bodyMarkdown,
+    titleEn: row.titleEn,
+    bodyMarkdownEn: row.bodyMarkdownEn,
+    titleNb: row.titleNb,
+    bodyMarkdownNb: row.bodyMarkdownNb,
+    blocking: row.blocking,
+    forceUpdate: row.forceUpdate,
+    versionOp: row.versionOp,
+    versionA: row.versionA,
+    versionB: row.versionB,
+    updateUrl: row.updateUrl ?? config.appStoreUrl,
+    sortOrder: row.sortOrder,
+    updatedAt: row.updatedAt.toISOString(),
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function publicShape(row: LaunchMessageRow, lang: "en" | "nb") {
+  const content = localizedContent(row, lang);
+  return {
+    id: row.id,
+    enabled: row.enabled,
+    title: content.title,
+    bodyMarkdown: content.bodyMarkdown,
+    lang,
     blocking: row.blocking,
     forceUpdate: row.forceUpdate,
     versionOp: row.versionOp,
@@ -59,11 +99,14 @@ function sortMessages<T extends { forceUpdate: boolean; sortOrder: number; updat
   });
 }
 
-/** Public: enabled splash messages (optional ?iosVersion= filters server-side). */
+/** Public: enabled splash messages (?iosVersion=&lang=en|nb). */
 router.get("/launch-messages", async (req, res, next) => {
   try {
     const iosVersion =
       typeof req.query.iosVersion === "string" ? req.query.iosVersion.trim() : "";
+    const lang = normalizeAppLang(
+      typeof req.query.lang === "string" ? req.query.lang : undefined
+    );
 
     const rows = await prisma.appLaunchMessage.findMany({
       where: { enabled: true },
@@ -81,7 +124,8 @@ router.get("/launch-messages", async (req, res, next) => {
       : rows;
 
     res.json({
-      messages: sortMessages(filtered).map(publicShape),
+      messages: sortMessages(filtered).map((row) => publicShape(row, lang)),
+      lang,
       defaultUpdateUrl: config.appStoreUrl,
     });
   } catch (err) {
@@ -121,8 +165,10 @@ router.post("/admin/login", async (req, res, next) => {
 const messageBodySchema = z
   .object({
     enabled: z.boolean(),
-    title: z.string().max(200),
-    bodyMarkdown: z.string().max(20000),
+    titleEn: z.string().max(200),
+    bodyMarkdownEn: z.string().max(20000),
+    titleNb: z.string().max(200).optional().default(""),
+    bodyMarkdownNb: z.string().max(20000).optional().default(""),
     blocking: z.boolean(),
     forceUpdate: z.boolean(),
     versionOp: versionOpSchema,
@@ -169,7 +215,7 @@ router.get(
   async (_req: AuthenticatedRequest, res, next) => {
     try {
       const rows = await prisma.appLaunchMessage.findMany();
-      res.json({ messages: sortMessages(rows).map(publicShape) });
+      res.json({ messages: sortMessages(rows).map(adminShape) });
     } catch (err) {
       next(err);
     }
@@ -185,8 +231,10 @@ router.post(
       const row = await prisma.appLaunchMessage.create({
         data: {
           enabled: body.enabled,
-          title: body.title,
-          bodyMarkdown: body.bodyMarkdown,
+          titleEn: body.titleEn,
+          bodyMarkdownEn: body.bodyMarkdownEn,
+          titleNb: body.titleNb,
+          bodyMarkdownNb: body.bodyMarkdownNb,
           blocking: body.blocking,
           forceUpdate: body.forceUpdate,
           versionOp: body.versionOp,
@@ -196,7 +244,7 @@ router.post(
           sortOrder: body.sortOrder,
         },
       });
-      res.status(201).json(publicShape(row));
+      res.status(201).json(adminShape(row));
     } catch (err) {
       next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
     }
@@ -213,8 +261,10 @@ router.put(
         where: { id: req.params.id },
         data: {
           enabled: body.enabled,
-          title: body.title,
-          bodyMarkdown: body.bodyMarkdown,
+          titleEn: body.titleEn,
+          bodyMarkdownEn: body.bodyMarkdownEn,
+          titleNb: body.titleNb,
+          bodyMarkdownNb: body.bodyMarkdownNb,
           blocking: body.blocking,
           forceUpdate: body.forceUpdate,
           versionOp: body.versionOp,
@@ -224,7 +274,7 @@ router.put(
           sortOrder: body.sortOrder,
         },
       });
-      res.json(publicShape(row));
+      res.json(adminShape(row));
     } catch (err) {
       if (
         err instanceof Prisma.PrismaClientKnownRequestError &&

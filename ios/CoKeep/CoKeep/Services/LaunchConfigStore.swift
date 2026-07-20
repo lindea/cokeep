@@ -47,12 +47,16 @@ final class LaunchConfigStore: ObservableObject {
         defer { isChecking = false }
 
         let installed = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+        let lang = L10n.appLanguageCode
 
         do {
             let response: LaunchMessagesResponse = try await APIClient.shared.request(
                 "GET",
                 path: "api/app/launch-messages",
-                query: [URLQueryItem(name: "iosVersion", value: installed)],
+                query: [
+                    URLQueryItem(name: "iosVersion", value: installed),
+                    URLQueryItem(name: "lang", value: lang),
+                ],
                 authorized: false
             )
             queue = Self.applicableMessages(response.messages, installed: installed)

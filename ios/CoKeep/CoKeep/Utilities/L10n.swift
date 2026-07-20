@@ -7,16 +7,20 @@ final class LocalizationStore: ObservableObject {
     @Published private(set) var locale: Locale
 
     init() {
-        let preferred = Locale.preferredLanguages.first ?? "en"
-        if preferred.hasPrefix("nb") || preferred.hasPrefix("nn") || preferred.hasPrefix("no") {
-            locale = Locale(identifier: "nb")
-        } else {
-            locale = Locale(identifier: "en")
-        }
+        locale = Locale(identifier: L10n.appLanguageCode)
     }
 }
 
 enum L10n {
+    /// App language code matching LocalizationStore (`en` or `nb`).
+    static var appLanguageCode: String {
+        let preferred = Locale.preferredLanguages.first ?? "en"
+        if preferred.hasPrefix("nb") || preferred.hasPrefix("nn") || preferred.hasPrefix("no") {
+            return "nb"
+        }
+        return "en"
+    }
+
     static func string(_ key: String) -> String {
         NSLocalizedString(key, comment: "")
     }

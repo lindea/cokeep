@@ -1,6 +1,11 @@
 import cron from "node-cron";
 import { prisma } from "../config/db";
 import { notifyUser } from "../services/push";
+import {
+  normalizeAppLang,
+  todoDueSoonPushCopy,
+  todoOverduePushCopy,
+} from "../utils/locale";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -16,14 +21,19 @@ export async function runDueNotifications(): Promise<void> {
       dueDate: { gte: now, lte: weekAhead },
       assigneeId: { not: null },
     },
-    include: { list: { include: { object: true } } },
+    include: {
+      list: { include: { object: true } },
+      assignee: { select: { preferredLanguage: true } },
+    },
   });
 
   for (const item of dueSoon) {
     if (!item.assigneeId || !item.dueDate) continue;
+    const lang = normalizeAppLang(item.assignee?.preferredLanguage);
+    const copy = todoDueSoonPushCopy(lang, item.name, item.list.object.name);
     await notifyUser(item.assigneeId, "TODO_DUE_SOON", {
-      title: "CoKeep",
-      body: `“${item.name}” on ${item.list.object.name} is due within a week`,
+      title: copy.title,
+      body: copy.body,
       data: {
         type: "todo_due_soon",
         todoItemId: item.id,
@@ -44,14 +54,19 @@ export async function runDueNotifications(): Promise<void> {
       dueDate: { lt: now },
       assigneeId: { not: null },
     },
-    include: { list: { include: { object: true } } },
+    include: {
+      list: { include: { object: true } },
+      assignee: { select: { preferredLanguage: true } },
+    },
   });
 
   for (const item of overdue) {
     if (!item.assigneeId) continue;
+    const lang = normalizeAppLang(item.assignee?.preferredLanguage);
+    const copy = todoOverduePushCopy(lang, item.name, item.list.object.name);
     await notifyUser(item.assigneeId, "TODO_OVERDUE", {
-      title: "CoKeep",
-      body: `“${item.name}” on ${item.list.object.name} is overdue`,
+      title: copy.title,
+      body: copy.body,
       data: {
         type: "todo_overdue",
         todoItemId: item.id,

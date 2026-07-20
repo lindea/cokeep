@@ -6,6 +6,7 @@ import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { requireObjectMember, requireObjectOwner } from "../services/access";
 import { notifyUser } from "../services/push";
+import { invitePushCopy, normalizeAppLang } from "../utils/locale";
 import { markInviteNotificationsRead } from "../services/badge";
 import { normalizePhone, publicUser } from "../utils/helpers";
 
@@ -64,9 +65,14 @@ router.post("/objects/:objectId/invites", async (req: AuthenticatedRequest, res,
     const inviteUrl = `${config.appStoreUrl}?invite=${invite.token}`;
 
     if (existingUser) {
+      const copy = invitePushCopy(
+        normalizeAppLang(existingUser.preferredLanguage),
+        inviter.firstName,
+        object.name
+      );
       await notifyUser(existingUser.id, "INVITE", {
-        title: "CoKeep",
-        body: `${inviter.firstName} invited you to join “${object.name}”`,
+        title: copy.title,
+        body: copy.body,
         data: {
           type: "invite",
           inviteId: invite.id,

@@ -53,16 +53,18 @@ enum NotificationType {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  firstName    String
-  lastName     String
-  email        String   @unique
-  phoneE164    String   @unique
-  countryCode  String
-  passwordHash String
-  avatarUrl    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String   @id @default(uuid())
+  firstName         String
+  lastName          String
+  email             String   @unique
+  phoneE164         String   @unique
+  countryCode       String
+  passwordHash      String
+  avatarUrl         String?
+  /** App UI language: `en` (default) or `nb` — used for push notification copy. */
+  preferredLanguage String   @default("en")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   memberships          ObjectMembership[]
   createdObjects       SharedObject[]       @relation("ObjectCreator")
@@ -268,23 +270,26 @@ enum LaunchVersionOp {
 
 /** One of potentially many launch splash / force-update messages. */
 model AppLaunchMessage {
-  id            String          @id @default(uuid())
-  enabled       Boolean         @default(true)
-  title         String          @default("")
-  bodyMarkdown  String          @default("") @db.Text
-  blocking      Boolean         @default(false)
+  id               String          @id @default(uuid())
+  enabled          Boolean         @default(true)
+  /** English (default) title / body — same locales as the iOS app. */
+  titleEn          String          @default("")
+  bodyMarkdownEn   String          @default("") @db.Text
+  titleNb          String          @default("")
+  bodyMarkdownNb   String          @default("") @db.Text
+  blocking         Boolean         @default(false)
   /** When true, matching clients must update (no Continue). */
-  forceUpdate   Boolean         @default(false)
-  versionOp     LaunchVersionOp @default(ANY)
+  forceUpdate      Boolean         @default(false)
+  versionOp        LaunchVersionOp @default(ANY)
   /** Primary version for EQ/LT/LTE/GT/GTE, or lower bound for BETWEEN. */
-  versionA      String?
+  versionA         String?
   /** Upper bound for BETWEEN (inclusive). */
-  versionB      String?
-  updateUrl     String?
+  versionB         String?
+  updateUrl        String?
   /** Lower sortOrder is shown first when multiple messages match. */
-  sortOrder     Int             @default(0)
-  updatedAt     DateTime        @updatedAt
-  createdAt     DateTime        @default(now())
+  sortOrder        Int             @default(0)
+  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime        @default(now())
 
   @@index([enabled, sortOrder])
 }

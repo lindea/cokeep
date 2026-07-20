@@ -1,5 +1,6 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { AppError } from "../middleware/error";
+import { normalizeAppLang } from "./locale";
 
 /** Normalize phone to E.164 using country calling code like "+47". */
 export function normalizePhone(phone: string, countryCode: string): string {
@@ -25,6 +26,7 @@ export function publicUser(user: {
   phoneE164: string;
   countryCode: string;
   avatarUrl: string | null;
+  preferredLanguage?: string;
 }) {
   return {
     id: user.id,
@@ -34,5 +36,6 @@ export function publicUser(user: {
     phoneE164: user.phoneE164,
     countryCode: user.countryCode,
     avatarUrl: user.avatarUrl,
+    preferredLanguage: normalizeAppLang(user.preferredLanguage),
   };
 }

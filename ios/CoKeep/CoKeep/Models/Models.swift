@@ -8,6 +8,7 @@ struct User: Codable, Identifiable, Hashable {
     var phoneE164: String
     var countryCode: String
     var avatarUrl: String?
+    var preferredLanguage: String?
 
     var displayName: String { "\(firstName) \(lastName)" }
     var initials: String {

@@ -23,6 +23,7 @@ enum PushNotificationRegistrar {
         struct Body: Encodable {
             let token: String
             let platform: String
+            let language: String
         }
         struct Resp: Codable {
             let device: DeviceTokenDTO
@@ -34,7 +35,7 @@ enum PushNotificationRegistrar {
             let _: Resp = try await APIClient.shared.request(
                 "POST",
                 path: "api/users/device-token",
-                body: Body(token: token, platform: "ios")
+                body: Body(token: token, platform: "ios", language: L10n.appLanguageCode)
             )
         } catch {
             print("Failed to register device token: \(error)")

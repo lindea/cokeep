@@ -4,6 +4,7 @@ import { prisma } from "../config/db";
 import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { publicUser } from "../utils/helpers";
+import { normalizeAppLang } from "../utils/locale";
 import {
   getUnreadAlertSummary,
   markInviteNotificationsRead,
@@ -22,6 +23,7 @@ router.patch("/me", async (req: AuthenticatedRequest, res, next) => {
         lastName: z.string().min(1).max(80).optional(),
         email: z.string().email().optional(),
         avatarUrl: z.string().url().nullable().optional(),
+        preferredLanguage: z.string().min(2).max(16).optional(),
       })
       .parse(req.body);
 
@@ -34,9 +36,20 @@ router.patch("/me", async (req: AuthenticatedRequest, res, next) => {
       body.email = email;
     }
 
+    const data: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      avatarUrl?: string | null;
+      preferredLanguage?: string;
+    } = { ...body };
+    if (body.preferredLanguage !== undefined) {
+      data.preferredLanguage = normalizeAppLang(body.preferredLanguage);
+    }
+
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
-      data: body,
+      data,
     });
 
     res.json({ user: publicUser(user) });
@@ -51,8 +64,16 @@ router.post("/device-token", async (req: AuthenticatedRequest, res, next) => {
       .object({
         token: z.string().min(10),
         platform: z.enum(["ios", "android"]).default("ios"),
+        language: z.string().min(2).max(16).optional(),
       })
       .parse(req.body);
+
+    if (body.language) {
+      await prisma.user.update({
+        where: { id: req.user!.userId },
+        data: { preferredLanguage: normalizeAppLang(body.language) },
+      });
+    }
 
     const device = await prisma.deviceToken.upsert({
       where: { token: body.token },

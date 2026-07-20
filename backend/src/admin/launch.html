@@ -118,6 +118,13 @@
     .badge.off { background: #eee; color: var(--muted); }
     .badge.force { background: #f5e0de; color: var(--danger); }
     .hint { font-family: system-ui, sans-serif; font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
+    .lang-tabs { display: flex; gap: 0.4rem; margin-top: 1.25rem; font-family: system-ui, sans-serif; }
+    .lang-tab {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+      padding: 0.45rem 0.9rem; border-radius: 999px; font-size: 0.85rem;
+    }
+    .lang-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .lang-panel { margin-top: 0.25rem; }
   </style>
 </head>
 <body>
@@ -139,7 +146,7 @@
       <div class="topbar">
         <div>
           <h1>Launch messages</h1>
-          <p class="sub">Multiple Markdown splashes, each targeted by app version.</p>
+          <p class="sub">Multiple Markdown splashes, each targeted by app version. English + Norwegian like the iOS app.</p>
         </div>
         <button type="button" class="btn-ghost" id="logout-btn">Sign out</button>
       </div>
@@ -161,10 +168,24 @@
           <label class="check"><input type="checkbox" id="blocking" /> Block until acknowledged</label>
           <label class="check"><input type="checkbox" id="forceUpdate" /> Force update (no Continue)</label>
         </div>
-        <label for="title">Title</label>
-        <input id="title" type="text" maxlength="200" placeholder="Important notice" />
-        <label for="body">Body (Markdown)</label>
-        <textarea id="body" placeholder="**Bold**, lists, links…"></textarea>
+
+        <div class="lang-tabs">
+          <button type="button" class="lang-tab active" data-lang="en" id="tab-en">English</button>
+          <button type="button" class="lang-tab" data-lang="nb" id="tab-nb">Norsk</button>
+        </div>
+        <div id="lang-en" class="lang-panel">
+          <label for="titleEn">Title (English)</label>
+          <input id="titleEn" type="text" maxlength="200" placeholder="Important notice" />
+          <label for="bodyEn">Body (English, Markdown)</label>
+          <textarea id="bodyEn" placeholder="**Bold**, lists, links…"></textarea>
+        </div>
+        <div id="lang-nb" class="lang-panel hidden">
+          <label for="titleNb">Title (Norsk)</label>
+          <input id="titleNb" type="text" maxlength="200" placeholder="Viktig melding" />
+          <label for="bodyNb">Body (Norsk, Markdown)</label>
+          <textarea id="bodyNb" placeholder="**Fet**, lister, lenker…"></textarea>
+          <p class="hint">If Norwegian is empty, the app falls back to English.</p>
+        </div>
         <div class="grid-3">
           <div>
             <label for="versionOp">Version rule</label>
@@ -241,17 +262,45 @@
 
     function simpleMarkdown(md) {
       const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-      let html = esc(md || "");
-      html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-      html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-      html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-      html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-      html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-      html = html.replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-      html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
-      html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => "<ul>" + m + "</ul>");
-      html = html.replace(/\n\n/g, "</p><p>");
-      return "<p>" + html + "</p>";
+      const lines = String(md || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+      const blocks = [];
+      let para = [];
+      let list = [];
+
+      const flushPara = () => {
+        if (!para.length) return;
+        const html = para.map((line) => inlineMd(esc(line))).join("<br>");
+        blocks.push("<p>" + html + "</p>");
+        para = [];
+      };
+      const flushList = () => {
+        if (!list.length) return;
+        blocks.push("<ul>" + list.map((item) => "<li>" + inlineMd(esc(item)) + "</li>").join("") + "</ul>");
+        list = [];
+      };
+      const inlineMd = (s) => s
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>")
+        .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+      for (const line of lines) {
+        if (!line.trim()) {
+          flushPara();
+          flushList();
+          continue;
+        }
+        const listMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+        if (listMatch) {
+          flushPara();
+          list.push(listMatch[1]);
+        } else {
+          flushList();
+          para.push(line.trim());
+        }
+      }
+      flushPara();
+      flushList();
+      return blocks.join("") || "<p></p>";
     }
 
     function versionLabel(m) {
@@ -288,6 +337,18 @@
       $("version-hint").textContent = hints[op] || "";
     }
 
+    function setLangTab(lang) {
+      $("tab-en").classList.toggle("active", lang === "en");
+      $("tab-nb").classList.toggle("active", lang === "nb");
+      $("lang-en").classList.toggle("hidden", lang !== "en");
+      $("lang-nb").classList.toggle("hidden", lang !== "nb");
+      renderPreview();
+    }
+
+    function listTitle(m) {
+      return m.titleEn || m.titleNb || "(untitled)";
+    }
+
     function renderList() {
       const list = $("message-list");
       const empty = $("list-empty");
@@ -297,12 +358,14 @@
       messages.forEach((m) => {
         const el = document.createElement("div");
         el.className = "list-item" + (m.id === activeId ? " active" : "");
+        const hasNb = !!(m.titleNb || m.bodyMarkdownNb);
         el.innerHTML =
           "<div><div>" +
           (m.enabled ? '<span class="badge">On</span>' : '<span class="badge off">Off</span>') +
           (m.forceUpdate ? '<span class="badge force">Force update</span>' : "") +
           (m.blocking ? '<span class="badge">Blocking</span>' : "") +
-          "<strong>" + (m.title || "(untitled)") + "</strong></div>" +
+          (hasNb ? '<span class="badge">EN+NB</span>' : '<span class="badge off">EN</span>') +
+          "<strong>" + listTitle(m) + "</strong></div>" +
           '<div class="meta">' + versionLabel(m) + " · priority " + m.sortOrder + "</div></div>";
         el.onclick = () => fillForm(m);
         list.appendChild(el);
@@ -315,8 +378,10 @@
       $("enabled").checked = true;
       $("blocking").checked = false;
       $("forceUpdate").checked = false;
-      $("title").value = "";
-      $("body").value = "";
+      $("titleEn").value = "";
+      $("bodyEn").value = "";
+      $("titleNb").value = "";
+      $("bodyNb").value = "";
       $("versionOp").value = "ANY";
       $("versionA").value = "";
       $("versionB").value = "";
@@ -324,6 +389,7 @@
       $("updateUrl").value = "";
       $("delete-btn").classList.add("hidden");
       $("save-msg").textContent = "";
+      setLangTab("en");
       updateVersionUi();
       renderPreview();
       renderList();
@@ -335,8 +401,10 @@
       $("enabled").checked = !!m.enabled;
       $("blocking").checked = !!m.blocking;
       $("forceUpdate").checked = !!m.forceUpdate;
-      $("title").value = m.title || "";
-      $("body").value = m.bodyMarkdown || "";
+      $("titleEn").value = m.titleEn || "";
+      $("bodyEn").value = m.bodyMarkdownEn || "";
+      $("titleNb").value = m.titleNb || "";
+      $("bodyNb").value = m.bodyMarkdownNb || "";
       $("versionOp").value = m.versionOp || "ANY";
       $("versionA").value = m.versionA || "";
       $("versionB").value = m.versionB || "";
@@ -344,6 +412,7 @@
       $("updateUrl").value = m.updateUrl || "";
       $("delete-btn").classList.remove("hidden");
       $("save-msg").textContent = "";
+      setLangTab("en");
       updateVersionUi();
       renderPreview();
       renderList();
@@ -354,8 +423,10 @@
         enabled: $("enabled").checked,
         blocking: $("blocking").checked,
         forceUpdate: $("forceUpdate").checked,
-        title: $("title").value,
-        bodyMarkdown: $("body").value,
+        titleEn: $("titleEn").value,
+        bodyMarkdownEn: $("bodyEn").value,
+        titleNb: $("titleNb").value,
+        bodyMarkdownNb: $("bodyNb").value,
         versionOp: $("versionOp").value,
         versionA: $("versionA").value || null,
         versionB: $("versionB").value || null,
@@ -365,10 +436,15 @@
     }
 
     function renderPreview() {
-      const title = $("title").value.trim();
+      const nbActive = $("tab-nb").classList.contains("active");
+      const title = (nbActive ? $("titleNb").value : $("titleEn").value).trim()
+        || $("titleEn").value.trim();
+      const body = nbActive
+        ? ($("bodyNb").value.trim() ? $("bodyNb").value : $("bodyEn").value)
+        : $("bodyEn").value;
       $("preview").innerHTML =
         (title ? "<h2>" + title.replace(/</g,"&lt;") + "</h2>" : "") +
-        simpleMarkdown($("body").value);
+        simpleMarkdown(body);
     }
 
     function showEditor(on) {
@@ -407,8 +483,11 @@
     $("new-btn").onclick = () => clearForm();
     $("preview-btn").onclick = renderPreview;
     $("versionOp").onchange = updateVersionUi;
-    $("body").addEventListener("input", renderPreview);
-    $("title").addEventListener("input", renderPreview);
+    $("tab-en").onclick = () => setLangTab("en");
+    $("tab-nb").onclick = () => setLangTab("nb");
+    ["titleEn", "bodyEn", "titleNb", "bodyNb"].forEach((id) => {
+      $(id).addEventListener("input", renderPreview);
+    });
 
     $("save-btn").onclick = async () => {
       $("save-msg").textContent = "";
