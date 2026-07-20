@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && mkdir -p dist/admin && cp src/admin/launch.html dist/admin/launch.html",
     "start": "node dist/index.js",
     "heroku-postbuild": "npm run build",
     "seed": "tsx prisma/seed.ts",
@@ -26,7 +26,6 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
-    "firebase-admin": "^13.10.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.11.20",

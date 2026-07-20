@@ -255,3 +255,20 @@ model Notification {
 
   @@index([userId, createdAt])
 }
+
+/** Singleton-style launch splash / force-update config (always id = "default"). */
+model AppLaunchConfig {
+  id              String   @id @default("default")
+  enabled         Boolean  @default(false)
+  title           String   @default("")
+  /** Markdown body shown on the launch splash. */
+  bodyMarkdown    String   @default("") @db.Text
+  /** If true, user must acknowledge before using the app (while enabled). */
+  blocking        Boolean  @default(false)
+  /** If true and app version < minIosVersion, usage is blocked until update. */
+  forceUpdate     Boolean  @default(false)
+  minIosVersion   String?
+  updateUrl       String?
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}

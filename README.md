@@ -18,10 +18,11 @@ Track and split maintenance work on co-owned property (cabins, shared homes, and
 - **Work logs** — start/end time entries per item; total duration on list, full log on detail
 - **Costs** — amount + optional receipt photo; optional link to a to-do item
 - **Reports** — spendings & work: totals, per-user breakdown, preset/custom periods, list + charts
-- **Users & invites** — register, invite by phone / contacts; SMS for new users, push for existing
+- **Users & invites** — register, invite by phone / contacts; Messages compose for new users, push for existing
 - **Membership** — leave object anytime; creator can remove members
 - **Notifications** — due soon (7 days) and overdue push alerts
 - **Profile** — name, email, avatar; forgot-password email reset deep link
+- **Launch splash** — optional Markdown announcement / force-update gate (admin UI at `/admin`)
 
 ## Quick start
 
@@ -53,7 +54,7 @@ API listens on `http://localhost:3000`. Health: `GET /health`.
 
 ## Environment variables
 
-See `backend/.env.example` for JWT secrets, SMTP, Twilio (SMS), and APNs placeholders.
+See `backend/.env.example` for JWT secrets, SMTP, APNs, and admin login placeholders.
 
 ## Project layout
 
@@ -76,8 +77,10 @@ docker-compose.yml
 | Costs | `/api/objects/:id/costs` |
 | Reports | `/api/objects/:id/reports` |
 | Uploads | `/api/uploads` |
+| App launch config | `/api/app` |
+| Admin UI | `/admin` |
 
 ## Notes
 
-- SMS and APNs are abstracted behind services with console/dev implementations so you can run locally without third-party credentials.
+- Invites return an `inviteUrl` for the iOS app to open in Messages; APNs push is used for existing users. Email uses SMTP when configured (otherwise console).
 - Password reset and invite deep links use `cokeep://` URL schemes (configure Associated Domains for production App Store links).

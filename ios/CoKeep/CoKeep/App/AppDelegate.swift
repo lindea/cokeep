@@ -1,7 +1,7 @@
 import UIKit
 import UserNotifications
 
-/// Registers for remote notifications and routes notification taps (native APNs, no Firebase SDK).
+/// Registers for remote notifications and routes notification taps (native APNs).
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,

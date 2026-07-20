@@ -37,14 +37,6 @@ export const config = {
     pass: process.env.SMTP_PASS || "",
     from: process.env.SMTP_FROM ?? "CoKeep <noreply@cokeep.app>",
   },
-  twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || "",
-    authToken: process.env.TWILIO_AUTH_TOKEN || "",
-    fromNumber: process.env.TWILIO_FROM_NUMBER || "",
-  },
-  fcm: {
-    credentialsPath: process.env.FCM_CREDENTIALS_PATH || "",
-  },
   apns: {
     keyId: process.env.APNS_KEY_ID || "",
     teamId: process.env.APNS_TEAM_ID || "",
@@ -52,5 +44,10 @@ export const config = {
     /** Raw .p8 key contents (for Heroku). Supports literal newlines or `\\n` escapes. */
     key: process.env.APNS_KEY || "",
     keyPath: process.env.APNS_KEY_PATH || "",
+  },
+  admin: {
+    username: process.env.ADMIN_USERNAME || "admin",
+    /** Plain password checked at login (hash would be better long-term; env is fine for small ops). */
+    password: process.env.ADMIN_PASSWORD || "",
   },
 };

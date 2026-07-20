@@ -35,6 +35,7 @@ First-time path: Welcome → Register → empty Objects → Create (Cabin/Generi
 
 | Concern | Dev behavior | Production |
 |---------|--------------|------------|
-| SMS invites | Console log | Twilio |
+| Invites (new users) | iOS opens Messages with prefilled body | Same |
 | Email reset | Console log | SMTP |
 | Push | Console + in-app Notification rows | APNs |
+| Launch splash | Disabled by default | `/admin` + `ADMIN_*` env |

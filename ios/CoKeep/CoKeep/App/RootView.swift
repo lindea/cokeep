@@ -2,11 +2,21 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var session: SessionStore
+    @StateObject private var launch = LaunchConfigStore.shared
 
     var body: some View {
         Group {
-            if session.isBootstrapping {
+            if session.isBootstrapping || launch.isChecking {
                 SplashView()
+            } else if let gate = launch.gate {
+                switch gate {
+                case .forceUpdate(let cfg):
+                    LaunchMessageView(config: cfg, isForceUpdate: true)
+                case .message(let cfg):
+                    LaunchMessageView(config: cfg, isForceUpdate: false) {
+                        launch.acknowledgeMessage()
+                    }
+                }
             } else if session.isAuthenticated {
                 MainTabView()
                     .task {
@@ -20,8 +30,12 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: session.isAuthenticated)
+        .animation(.easeInOut(duration: 0.25), value: launch.gate)
         .task {
-            await session.bootstrap()
+            async let boot = session.bootstrap()
+            async let cfg = launch.checkOnLaunch()
+            await boot
+            await cfg
         }
     }
 }

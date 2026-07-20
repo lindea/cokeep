@@ -1,5 +1,8 @@
 /* English (US) — default */
 "splash.tagline" = "Shared upkeep, made simple";
+"launch.continue" = "Continue";
+"launch.update" = "Update app";
+"launch.updateHint" = "A newer version of CoKeep is required to continue.";
 "welcome.headline" = "Maintain co-owned places together — without the spreadsheet chaos.";
 "welcome.getStarted" = "Create account";
 "welcome.signIn" = "Sign in";

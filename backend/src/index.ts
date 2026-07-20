@@ -9,6 +9,7 @@ import { startNotificationJobs } from "./jobs/notifications";
 import { initPushService } from "./services/push";
 import { isS3Configured } from "./services/s3";
 import { errorHandler, notFound } from "./middleware/error";
+import appRoutes from "./routes/app";
 import authRoutes from "./routes/auth";
 import costsRoutes from "./routes/costs";
 import invitesRoutes from "./routes/invites";
@@ -24,7 +25,10 @@ if (!fs.existsSync(config.uploadDir)) {
   fs.mkdirSync(config.uploadDir, { recursive: true });
 }
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false,
+}));
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(
@@ -46,10 +50,22 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/objects", objectsRoutes);
 app.use("/api/invites", invitesRoutes);
+app.use("/api/app", appRoutes);
 app.use("/api", todosRoutes);
 app.use("/api", costsRoutes);
 app.use("/api", reportsRoutes);
 app.use("/api/uploads", uploadsRoutes);
+
+/** Admin UI for launch splash / force-update (secured by ADMIN_* + JWT). */
+app.get("/admin", (_req, res) => {
+  res
+    .type("html")
+    .setHeader(
+      "Content-Security-Policy",
+      "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+    )
+    .sendFile(path.join(__dirname, "admin", "launch.html"));
+});
 
 /** Simple HTML fallback for password reset when opened in a browser. */
 app.get("/reset-password", (req, res) => {

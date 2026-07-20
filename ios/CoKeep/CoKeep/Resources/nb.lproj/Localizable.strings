@@ -1,5 +1,8 @@
 /* Norwegian Bokmål */
 "splash.tagline" = "Felles vedlikehold, gjort enkelt";
+"launch.continue" = "Fortsett";
+"launch.update" = "Oppdater appen";
+"launch.updateHint" = "Du må oppdatere til en nyere versjon av CoKeep for å fortsette.";
 "welcome.headline" = "Hold orden på vedlikehold av delte steder — uten regnearkkaos.";
 "welcome.getStarted" = "Opprett konto";
 "welcome.signIn" = "Logg inn";

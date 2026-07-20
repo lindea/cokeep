@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CoKeep Admin — Launch message</title>
+  <style>
+    :root {
+      --ink: #172924;
+      --muted: #596b63;
+      --accent: #1f6b5c;
+      --accent-soft: #c7e6dc;
+      --warm: #b8732e;
+      --danger: #b2382e;
+      --bg: #edf4f1;
+      --card: #ffffff;
+      --border: #d5e2dc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      background:
+        radial-gradient(ellipse at 10% 0%, #dceee8 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 20%, #e8eef4 0%, transparent 45%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 52rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    h1 { font-size: 1.85rem; font-weight: 600; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); margin: 0 0 1.75rem; font-family: system-ui, sans-serif; font-size: 0.95rem; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 12px 40px rgba(23, 41, 36, 0.06);
+    }
+    label {
+      display: block;
+      font-family: system-ui, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 1rem 0 0.4rem;
+    }
+    input[type="text"], input[type="password"], textarea {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font: inherit;
+      font-family: system-ui, sans-serif;
+      background: #fbfdfc;
+      color: var(--ink);
+    }
+    textarea { min-height: 11rem; resize: vertical; line-height: 1.45; }
+    .row { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 1rem; }
+    .check {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: system-ui, sans-serif; font-size: 0.95rem;
+    }
+    .check input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
+    .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    button {
+      font-family: system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 12px;
+      padding: 0.75rem 1.2rem;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: var(--accent-soft); color: var(--accent); }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .msg { font-family: system-ui, sans-serif; font-size: 0.9rem; margin-top: 1rem; }
+    .msg.ok { color: var(--accent); }
+    .msg.err { color: var(--danger); }
+    .preview {
+      margin-top: 1.25rem;
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      background: #f4f9f7;
+      border: 1px dashed var(--border);
+      font-family: system-ui, sans-serif;
+      line-height: 1.5;
+    }
+    .preview h1, .preview h2, .preview h3 { font-family: Georgia, serif; margin: 0.6em 0 0.35em; }
+    .preview p { margin: 0.5em 0; }
+    .preview ul { padding-left: 1.2rem; }
+    .hidden { display: none !important; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+    .topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="login-view" class="panel">
+      <h1>CoKeep admin</h1>
+      <p class="sub">Sign in to manage the launch splash and force-update settings.</p>
+      <label for="username">Username</label>
+      <input id="username" type="text" autocomplete="username" />
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" />
+      <div class="actions">
+        <button type="button" class="btn-primary" id="login-btn">Sign in</button>
+      </div>
+      <p id="login-msg" class="msg"></p>
+    </div>
+
+    <div id="editor-view" class="hidden">
+      <div class="topbar">
+        <div>
+          <h1>Launch message</h1>
+          <p class="sub">Shown as a rich-text splash when the iOS app starts.</p>
+        </div>
+        <button type="button" class="btn-ghost" id="logout-btn">Sign out</button>
+      </div>
+      <div class="panel">
+        <div class="row">
+          <label class="check"><input type="checkbox" id="enabled" /> Enable splash message</label>
+          <label class="check"><input type="checkbox" id="blocking" /> Block app until acknowledged</label>
+          <label class="check"><input type="checkbox" id="forceUpdate" /> Force update when below min version</label>
+        </div>
+        <label for="title">Title</label>
+        <input id="title" type="text" maxlength="200" placeholder="Important notice" />
+        <label for="body">Body (Markdown)</label>
+        <textarea id="body" placeholder="**Bold**, lists, links…"></textarea>
+        <div class="grid-2">
+          <div>
+            <label for="minIosVersion">Minimum iOS app version</label>
+            <input id="minIosVersion" type="text" placeholder="e.g. 1.1.0" />
+          </div>
+          <div>
+            <label for="updateUrl">Update URL (App Store)</label>
+            <input id="updateUrl" type="text" placeholder="https://apps.apple.com/…" />
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn-primary" id="save-btn">Save</button>
+          <button type="button" class="btn-secondary" id="preview-btn">Refresh preview</button>
+        </div>
+        <p id="save-msg" class="msg"></p>
+        <div class="preview" id="preview"><em>Preview</em></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const TOKEN_KEY = "cokeep.adminToken";
+    const $ = (id) => document.getElementById(id);
+
+    function token() { return localStorage.getItem(TOKEN_KEY); }
+    function setToken(t) {
+      if (t) localStorage.setItem(TOKEN_KEY, t);
+      else localStorage.removeItem(TOKEN_KEY);
+    }
+
+    async function api(method, path, body) {
+      const headers = { "Content-Type": "application/json" };
+      const t = token();
+      if (t) headers.Authorization = "Bearer " + t;
+      const res = await fetch(path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+      return data;
+    }
+
+    function simpleMarkdown(md) {
+      const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      let html = esc(md || "");
+      html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+      html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+      html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+      html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+      html = html.replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => "<ul>" + m + "</ul>");
+      html = html.replace(/\n\n/g, "</p><p>");
+      html = "<p>" + html + "</p>";
+      return html;
+    }
+
+    function fillForm(cfg) {
+      $("enabled").checked = !!cfg.enabled;
+      $("blocking").checked = !!cfg.blocking;
+      $("forceUpdate").checked = !!cfg.forceUpdate;
+      $("title").value = cfg.title || "";
+      $("body").value = cfg.bodyMarkdown || "";
+      $("minIosVersion").value = cfg.minIosVersion || "";
+      $("updateUrl").value = cfg.updateUrl || "";
+      renderPreview();
+    }
+
+    function renderPreview() {
+      const title = $("title").value.trim();
+      const body = $("body").value;
+      $("preview").innerHTML =
+        (title ? "<h2>" + title.replace(/</g,"&lt;") + "</h2>" : "") +
+        simpleMarkdown(body);
+    }
+
+    function showEditor(on) {
+      $("login-view").classList.toggle("hidden", on);
+      $("editor-view").classList.toggle("hidden", !on);
+    }
+
+    async function loadConfig() {
+      const cfg = await api("GET", "/api/app/admin/launch-config");
+      fillForm(cfg);
+      showEditor(true);
+    }
+
+    $("login-btn").onclick = async () => {
+      $("login-msg").textContent = "";
+      $("login-msg").className = "msg";
+      try {
+        const data = await api("POST", "/api/app/admin/login", {
+          username: $("username").value.trim(),
+          password: $("password").value,
+        });
+        setToken(data.token);
+        await loadConfig();
+      } catch (e) {
+        $("login-msg").textContent = e.message;
+        $("login-msg").className = "msg err";
+      }
+    };
+
+    $("logout-btn").onclick = () => {
+      setToken(null);
+      showEditor(false);
+    };
+
+    $("preview-btn").onclick = renderPreview;
+    $("body").addEventListener("input", renderPreview);
+    $("title").addEventListener("input", renderPreview);
+
+    $("save-btn").onclick = async () => {
+      $("save-msg").textContent = "";
+      $("save-msg").className = "msg";
+      try {
+        const saved = await api("PUT", "/api/app/admin/launch-config", {
+          enabled: $("enabled").checked,
+          blocking: $("blocking").checked,
+          forceUpdate: $("forceUpdate").checked,
+          title: $("title").value,
+          bodyMarkdown: $("body").value,
+          minIosVersion: $("minIosVersion").value || null,
+          updateUrl: $("updateUrl").value || null,
+        });
+        fillForm(saved);
+        $("save-msg").textContent = "Saved.";
+        $("save-msg").className = "msg ok";
+      } catch (e) {
+        $("save-msg").textContent = e.message;
+        $("save-msg").className = "msg err";
+      }
+    };
+
+    if (token()) {
+      loadConfig().catch(() => {
+        setToken(null);
+        showEditor(false);
+      });
+    }
+  </script>
+</body>
+</html>
