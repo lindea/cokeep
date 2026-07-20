@@ -72,9 +72,15 @@ function publicShape(row: LaunchMessageRow, lang: "en" | "nb") {
   return {
     id: row.id,
     enabled: row.enabled,
+    /** Resolved for the requested lang (with fallback). */
     title: content.title,
     bodyMarkdown: content.bodyMarkdown,
     lang,
+    /** Raw locales so the client can re-resolve with Bundle language if needed. */
+    titleEn: row.titleEn,
+    bodyMarkdownEn: row.bodyMarkdownEn,
+    titleNb: row.titleNb,
+    bodyMarkdownNb: row.bodyMarkdownNb,
     blocking: row.blocking,
     forceUpdate: row.forceUpdate,
     versionOp: row.versionOp,
@@ -99,14 +105,17 @@ function sortMessages<T extends { forceUpdate: boolean; sortOrder: number; updat
   });
 }
 
-/** Public: enabled splash messages (?iosVersion=&lang=en|nb). */
+/** Public: enabled splash messages (?iosVersion=&lang=en|nb). Also reads Accept-Language. */
 router.get("/launch-messages", async (req, res, next) => {
   try {
     const iosVersion =
       typeof req.query.iosVersion === "string" ? req.query.iosVersion.trim() : "";
-    const lang = normalizeAppLang(
-      typeof req.query.lang === "string" ? req.query.lang : undefined
-    );
+    const fromQuery =
+      typeof req.query.lang === "string" ? req.query.lang : undefined;
+    const fromHeader = req.headers["accept-language"];
+    const headerLang =
+      typeof fromHeader === "string" ? fromHeader.split(",")[0]?.trim() : undefined;
+    const lang = normalizeAppLang(fromQuery || headerLang);
 
     const rows = await prisma.appLaunchMessage.findMany({
       where: { enabled: true },

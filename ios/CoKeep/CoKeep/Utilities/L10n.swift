@@ -12,12 +12,29 @@ final class LocalizationStore: ObservableObject {
 }
 
 enum L10n {
-    /// App language code matching LocalizationStore (`en` or `nb`).
+    /// App language code matching LocalizationStore / Localizable.strings (`en` or `nb`).
+    /// Uses the same Bundle localization Apple applies to `NSLocalizedString`, not only
+    /// `Locale.preferredLanguages.first` (which can disagree on some devices).
     static var appLanguageCode: String {
-        let preferred = Locale.preferredLanguages.first ?? "en"
-        if preferred.hasPrefix("nb") || preferred.hasPrefix("nn") || preferred.hasPrefix("no") {
-            return "nb"
+        let candidates =
+            Bundle.main.preferredLocalizations
+            + Locale.preferredLanguages
+            + [Locale.current.identifier]
+
+        for raw in candidates {
+            let lower = raw.lowercased()
+            if lower.hasPrefix("nb") || lower.hasPrefix("nn") || lower.hasPrefix("no") {
+                return "nb"
+            }
         }
+
+        if #available(iOS 16, *) {
+            if let code = Locale.current.language.languageCode?.identifier.lowercased(),
+               code == "nb" || code == "nn" || code == "no" {
+                return "nb"
+            }
+        }
+
         return "en"
     }
 

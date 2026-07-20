@@ -9,8 +9,14 @@ enum LaunchVersionOp: String, Codable, Equatable {
 struct AppLaunchMessage: Codable, Equatable, Identifiable {
     let id: String
     var enabled: Bool
+    /// Server-resolved for requested lang (may be wrong if lang detection mismatched).
     var title: String
     var bodyMarkdown: String
+    var lang: String?
+    var titleEn: String?
+    var bodyMarkdownEn: String?
+    var titleNb: String?
+    var bodyMarkdownNb: String?
     var blocking: Bool
     var forceUpdate: Bool
     var versionOp: LaunchVersionOp
@@ -19,6 +25,28 @@ struct AppLaunchMessage: Codable, Equatable, Identifiable {
     var updateUrl: String?
     var sortOrder: Int
     var updatedAt: String
+
+    /// Picks EN/NB the same way as the rest of the app (`L10n.appLanguageCode`).
+    func localizedForApp() -> AppLaunchMessage {
+        let code = L10n.appLanguageCode
+        let useNb = code == "nb"
+        let nbTitle = titleNb?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let nbBody = bodyMarkdownNb?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let enTitle = titleEn?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let enBody = bodyMarkdownEn?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        var copy = self
+        if useNb {
+            // Prefer Norwegian when present; fall back to English only if NB is empty.
+            copy.title = nbTitle.isEmpty ? (enTitle.isEmpty ? title : enTitle) : nbTitle
+            copy.bodyMarkdown = nbBody.isEmpty ? (enBody.isEmpty ? bodyMarkdown : enBody) : nbBody
+        } else {
+            copy.title = enTitle.isEmpty ? title : enTitle
+            copy.bodyMarkdown = enBody.isEmpty ? bodyMarkdown : enBody
+        }
+        copy.lang = code
+        return copy
+    }
 }
 
 private struct LaunchMessagesResponse: Codable {
@@ -59,7 +87,10 @@ final class LaunchConfigStore: ObservableObject {
                 ],
                 authorized: false
             )
-            queue = Self.applicableMessages(response.messages, installed: installed)
+            queue = Self.applicableMessages(
+                response.messages.map { $0.localizedForApp() },
+                installed: installed
+            )
             presentNext()
         } catch {
             // Fail open: do not block the app if the config endpoint is unreachable.
