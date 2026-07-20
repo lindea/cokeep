@@ -63,7 +63,10 @@ final class LaunchConfigStore: ObservableObject {
     @Published private(set) var gate: Gate?
 
     private var queue: [AppLaunchMessage] = []
-    private let dismissedKey = "cokeep.launchMessage.dismissedById"
+    /// Message ids the user has already continued past (non–force-update).
+    private let seenIdsKey = "cokeep.launchMessage.seenIds"
+    /// Legacy map of id → updatedAt from earlier dismissal logic.
+    private let legacyDismissedKey = "cokeep.launchMessage.dismissedById"
 
     enum Gate: Equatable {
         case forceUpdate(AppLaunchMessage)
@@ -101,9 +104,9 @@ final class LaunchConfigStore: ObservableObject {
 
     func acknowledgeMessage() {
         guard case .message(let msg) = gate else { return }
-        if !msg.blocking {
-            markDismissed(msg)
-        }
+        // Blocking and non-blocking: once the user continues, never show again.
+        // Force-update never goes through this path.
+        markSeen(msg)
         if !queue.isEmpty {
             queue.removeFirst()
         }
@@ -112,20 +115,27 @@ final class LaunchConfigStore: ObservableObject {
 
     private func presentNext() {
         while let next = queue.first {
+            // Forced updates always show while the version rule matches.
             if next.forceUpdate {
                 gate = .forceUpdate(next)
                 return
             }
+
             let hasContent = !next.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 || !next.bodyMarkdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             if !hasContent {
                 queue.removeFirst()
                 continue
             }
-            if !next.blocking, isDismissed(next) {
+
+            // Already continued past this message (including confirmed blocking ones).
+            if hasSeen(next) {
                 queue.removeFirst()
                 continue
             }
+
+            // Blocking: keep presenting every launch until acknowledgeMessage().
+            // Non-blocking: same gate UI; first Continue marks seen.
             gate = .message(next)
             return
         }
@@ -145,18 +155,25 @@ final class LaunchConfigStore: ObservableObject {
             }
     }
 
-    private func dismissedMap() -> [String: String] {
-        (UserDefaults.standard.dictionary(forKey: dismissedKey) as? [String: String]) ?? [:]
+    private func seenIds() -> Set<String> {
+        var ids = Set(UserDefaults.standard.stringArray(forKey: seenIdsKey) ?? [])
+        // Migrate legacy per-update dismissal map → permanent seen ids.
+        if let legacy = UserDefaults.standard.dictionary(forKey: legacyDismissedKey) as? [String: String] {
+            ids.formUnion(legacy.keys)
+            UserDefaults.standard.set(Array(ids), forKey: seenIdsKey)
+            UserDefaults.standard.removeObject(forKey: legacyDismissedKey)
+        }
+        return ids
     }
 
-    private func isDismissed(_ msg: AppLaunchMessage) -> Bool {
-        dismissedMap()[msg.id] == msg.updatedAt
+    private func hasSeen(_ msg: AppLaunchMessage) -> Bool {
+        seenIds().contains(msg.id)
     }
 
-    private func markDismissed(_ msg: AppLaunchMessage) {
-        var map = dismissedMap()
-        map[msg.id] = msg.updatedAt
-        UserDefaults.standard.set(map, forKey: dismissedKey)
+    private func markSeen(_ msg: AppLaunchMessage) {
+        var ids = seenIds()
+        ids.insert(msg.id)
+        UserDefaults.standard.set(Array(ids), forKey: seenIdsKey)
     }
 }
 
