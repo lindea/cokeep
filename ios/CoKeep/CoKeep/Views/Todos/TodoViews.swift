@@ -72,7 +72,7 @@ struct TodoListSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(list.name)
+                Text(L10n.todoListName(list.name))
                     .font(.system(.title3, design: .rounded).weight(.semibold))
                     .foregroundStyle(Theme.ink)
                 Spacer()

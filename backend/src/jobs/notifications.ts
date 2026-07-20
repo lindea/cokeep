@@ -22,7 +22,7 @@ export async function runDueNotifications(): Promise<void> {
   for (const item of dueSoon) {
     if (!item.assigneeId || !item.dueDate) continue;
     await notifyUser(item.assigneeId, "TODO_DUE_SOON", {
-      title: "Task due soon",
+      title: "CoKeep",
       body: `“${item.name}” on ${item.list.object.name} is due within a week`,
       data: {
         type: "todo_due_soon",
@@ -49,7 +49,7 @@ export async function runDueNotifications(): Promise<void> {
   for (const item of overdue) {
     if (!item.assigneeId) continue;
     await notifyUser(item.assigneeId, "TODO_OVERDUE", {
-      title: "Task overdue",
+      title: "CoKeep",
       body: `“${item.name}” on ${item.list.object.name} is overdue`,
       data: {
         type: "todo_overdue",

@@ -1,66 +1,108 @@
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
-	classes = {};
+	classes = {
+	};
 	objectVersion = 56;
 	objects = {
 
-		96087DFB2AFD431886F4C42C /* CoKeepApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */; };
-		458BE09D2481483993ACFF5A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F111F76F8346CD889084AF /* RootView.swift */; };
-		60B672C8AE6F417A928EC4BD /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2B9D49CCC54F4A9D0B647D /* Models.swift */; };
+/* Begin PBXBuildFile section */
 		314BAD6F01D74BACB56C5F01 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226F4EC492974E00BC94BF36 /* APIClient.swift */; };
+		39DC7FC2361449AF8F0D6F5E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 11D8763CFCC64B01B17F6EB5 /* Localizable.strings */; };
+		3B10436D337649BDA3D0759D /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7153F225A0E04800A0304FEF /* L10n.swift */; };
+		458BE09D2481483993ACFF5A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F111F76F8346CD889084AF /* RootView.swift */; };
+		497273AD45CC47F8A8DCDD1B /* AuthViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9499ACF22A9E41FF83822F6C /* AuthViews.swift */; };
+		5F797B2C94A840A18E9B550E /* CostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1F5C75972647B1AB4E4862 /* CostsView.swift */; };
+		60B672C8AE6F417A928EC4BD /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2B9D49CCC54F4A9D0B647D /* Models.swift */; };
+		7166B87D5B194EAE8A3F63E9 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B9869073674D6598D2684B /* MainTabView.swift */; };
+		85B7809A6E63473382A1BE27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */; };
+		9356D7BC89D8418191D73B61 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB4E05521C014AA2AA2321FE /* ReportsView.swift */; };
+		96087DFB2AFD431886F4C42C /* CoKeepApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */; };
 		9DD95106E93741BFB89A0A89 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* PushNotificationRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */; };
 		A313FA10DA6F42CC80D2D5FB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839F300E9B184C1395CE10AA /* Theme.swift */; };
-		3B10436D337649BDA3D0759D /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7153F225A0E04800A0304FEF /* L10n.swift */; };
-		497273AD45CC47F8A8DCDD1B /* AuthViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9499ACF22A9E41FF83822F6C /* AuthViews.swift */; };
-		7166B87D5B194EAE8A3F63E9 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B9869073674D6598D2684B /* MainTabView.swift */; };
-		E03463ABFB214CBD81427B3A /* ObjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652C0E32263840988193DD29 /* ObjectsListView.swift */; };
 		C21A2930503A4CB88B86B291 /* ObjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7F3366E4374906A043077E /* ObjectDetailView.swift */; };
 		D40D59B37005483D8FCBEBC9 /* TodoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02824302E7AD43A792AAD411 /* TodoViews.swift */; };
-		5F797B2C94A840A18E9B550E /* CostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1F5C75972647B1AB4E4862 /* CostsView.swift */; };
-		9356D7BC89D8418191D73B61 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB4E05521C014AA2AA2321FE /* ReportsView.swift */; };
+		E03463ABFB214CBD81427B3A /* ObjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652C0E32263840988193DD29 /* ObjectsListView.swift */; };
+		EC5DD7B6F65FF2EDA07750B5 /* Pods_CoKeep.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6C85DEEF162E96CC1433FF /* Pods_CoKeep.framework */; };
+		F1A2B3C4D5E60718293A4B5D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */; };
 		FC106012A657495DA57FB153 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64374478EE104AFC943B2B7C /* ProfileView.swift */; };
-		85B7809A6E63473382A1BE27 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */; };
-		39DC7FC2361449AF8F0D6F5E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 11D8763CFCC64B01B17F6EB5 /* Localizable.strings */; };
+/* End PBXBuildFile section */
 
-		E79996CFCA9A419DA89F7A66 /* CoKeep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CoKeep.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoKeepApp.swift; sourceTree = "<group>"; };
-		B5F111F76F8346CD889084AF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		EA2B9D49CCC54F4A9D0B647D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		226F4EC492974E00BC94BF36 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
-		B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationRegistrar.swift; sourceTree = "<group>"; };
-		839F300E9B184C1395CE10AA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		7153F225A0E04800A0304FEF /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
-		9499ACF22A9E41FF83822F6C /* AuthViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViews.swift; sourceTree = "<group>"; };
-		13B9869073674D6598D2684B /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		652C0E32263840988193DD29 /* ObjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectsListView.swift; sourceTree = "<group>"; };
-		DE7F3366E4374906A043077E /* ObjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetailView.swift; sourceTree = "<group>"; };
+/* Begin PBXFileReference section */
 		02824302E7AD43A792AAD411 /* TodoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViews.swift; sourceTree = "<group>"; };
-		2A1F5C75972647B1AB4E4862 /* CostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostsView.swift; sourceTree = "<group>"; };
-		FB4E05521C014AA2AA2321FE /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
-		64374478EE104AFC943B2B7C /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		C94C26E4E0BC4FC28B17FB69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9E27D8E56C394C2FAAD3840A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		0D6C85DEEF162E96CC1433FF /* Pods_CoKeep.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_CoKeep.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B9869073674D6598D2684B /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		1BE4B20B0D134957A77BD842 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/Localizable.strings; sourceTree = "<group>"; };
+		226F4EC492974E00BC94BF36 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		2A1F5C75972647B1AB4E4862 /* CostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CostsView.swift; sourceTree = "<group>"; };
+		64374478EE104AFC943B2B7C /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		652C0E32263840988193DD29 /* ObjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectsListView.swift; sourceTree = "<group>"; };
+		67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoKeepApp.swift; sourceTree = "<group>"; };
+		7153F225A0E04800A0304FEF /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		839F300E9B184C1395CE10AA /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		8FFA025F1A3ACEC1E5E9526E /* Pods-CoKeep.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CoKeep.debug.xcconfig"; path = "Target Support Files/Pods-CoKeep/Pods-CoKeep.debug.xcconfig"; sourceTree = "<group>"; };
+		9499ACF22A9E41FF83822F6C /* AuthViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViews.swift; sourceTree = "<group>"; };
+		9E27D8E56C394C2FAAD3840A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationRegistrar.swift; sourceTree = "<group>"; };
+		B5F111F76F8346CD889084AF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		C94C26E4E0BC4FC28B17FB69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D1E2F3A4B5C60718293A4B5E /* CoKeep.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CoKeep.entitlements; sourceTree = "<group>"; };
+		DE7F3366E4374906A043077E /* ObjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetailView.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		E79996CFCA9A419DA89F7A66 /* CoKeep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CoKeep.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E9E300892FA0E18EEC00DFC1 /* Pods-CoKeep.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CoKeep.release.xcconfig"; path = "Target Support Files/Pods-CoKeep/Pods-CoKeep.release.xcconfig"; sourceTree = "<group>"; };
+		EA2B9D49CCC54F4A9D0B647D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		FB4E05521C014AA2AA2321FE /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
 
-		49D4BB5C0BB74ACB8046B86B /* App */ = {
+/* Begin PBXFrameworksBuildPhase section */
+		0F23A4C919324078A5182047 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EC5DD7B6F65FF2EDA07750B5 /* Pods_CoKeep.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		002B27CE2394401EA95F13A4 /*  */ = {
 			isa = PBXGroup;
 			children = (
-				67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */,
-				B5F111F76F8346CD889084AF /* RootView.swift */,
+				E79996CFCA9A419DA89F7A66 /* CoKeep.app */,
 			);
-			path = App;
 			sourceTree = "<group>";
 		};
-		D136EB95C79F448DA8CA57BA /* Models */ = {
+		14D8253BADEE4694B4F00080 /* Todos */ = {
 			isa = PBXGroup;
 			children = (
-				EA2B9D49CCC54F4A9D0B647D /* Models.swift */,
+				02824302E7AD43A792AAD411 /* TodoViews.swift */,
 			);
-			path = Models;
+			path = Todos;
+			sourceTree = "<group>";
+		};
+		2051BCD844B10E10C91C357E /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				8FFA025F1A3ACEC1E5E9526E /* Pods-CoKeep.debug.xcconfig */,
+				E9E300892FA0E18EEC00DFC1 /* Pods-CoKeep.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		2649902B54A74C2EBFA596A7 = {
+			isa = PBXGroup;
+			children = (
+				D9E8F780F55947DB99A28A36 /* CoKeep */,
+				002B27CE2394401EA95F13A4 /*  */,
+				2051BCD844B10E10C91C357E /* Pods */,
+				964433D33AD390A971358CC2 /* Frameworks */,
+			);
 			sourceTree = "<group>";
 		};
 		2BF81B5579E44CDEADB32EEF /* Services */ = {
@@ -73,13 +115,22 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
-		BA055DF194E7413AAFDCEE40 /* Utilities */ = {
+		37BBDA65AD0F4E16B5F4E6D0 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
-				839F300E9B184C1395CE10AA /* Theme.swift */,
-				7153F225A0E04800A0304FEF /* L10n.swift */,
+				64374478EE104AFC943B2B7C /* ProfileView.swift */,
 			);
-			path = Utilities;
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		49D4BB5C0BB74ACB8046B86B /* App */ = {
+			isa = PBXGroup;
+			children = (
+				67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */,
+				E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */,
+				B5F111F76F8346CD889084AF /* RootView.swift */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		4AF5979D3E3A4813A8164333 /* Auth */ = {
@@ -88,6 +139,14 @@
 				9499ACF22A9E41FF83822F6C /* AuthViews.swift */,
 			);
 			path = Auth;
+			sourceTree = "<group>";
+		};
+		70A8E56DB3694229B6D3BE6C /* Costs */ = {
+			isa = PBXGroup;
+			children = (
+				2A1F5C75972647B1AB4E4862 /* CostsView.swift */,
+			);
+			path = Costs;
 			sourceTree = "<group>";
 		};
 		819129482D7A4556A8E414F6 /* Objects */ = {
@@ -100,20 +159,21 @@
 			path = Objects;
 			sourceTree = "<group>";
 		};
-		14D8253BADEE4694B4F00080 /* Todos */ = {
+		964433D33AD390A971358CC2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				02824302E7AD43A792AAD411 /* TodoViews.swift */,
+				0D6C85DEEF162E96CC1433FF /* Pods_CoKeep.framework */,
 			);
-			path = Todos;
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		70A8E56DB3694229B6D3BE6C /* Costs */ = {
+		BA055DF194E7413AAFDCEE40 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				2A1F5C75972647B1AB4E4862 /* CostsView.swift */,
+				839F300E9B184C1395CE10AA /* Theme.swift */,
+				7153F225A0E04800A0304FEF /* L10n.swift */,
 			);
-			path = Costs;
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		CFDE3ECDA92446658F6A6F17 /* Reports */ = {
@@ -124,12 +184,12 @@
 			path = Reports;
 			sourceTree = "<group>";
 		};
-		37BBDA65AD0F4E16B5F4E6D0 /* Profile */ = {
+		D136EB95C79F448DA8CA57BA /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				64374478EE104AFC943B2B7C /* ProfileView.swift */,
+				EA2B9D49CCC54F4A9D0B647D /* Models.swift */,
 			);
-			path = Profile;
+			path = Models;
 			sourceTree = "<group>";
 		};
 		D66407580B6142F4B9831ADD /* Views */ = {
@@ -145,14 +205,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		E7DB77F38B934AFCAF5233FF /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				11D8763CFCC64B01B17F6EB5 /* Localizable.strings */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		D9E8F780F55947DB99A28A36 /* CoKeep */ = {
 			isa = PBXGroup;
 			children = (
@@ -164,41 +216,31 @@
 				E7DB77F38B934AFCAF5233FF /* Resources */,
 				AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */,
 				C94C26E4E0BC4FC28B17FB69 /* Info.plist */,
+				D1E2F3A4B5C60718293A4B5E /* CoKeep.entitlements */,
 			);
 			path = CoKeep;
 			sourceTree = "<group>";
 		};
-		002B27CE2394401EA95F13A4 /* Products */ = {
+		E7DB77F38B934AFCAF5233FF /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E79996CFCA9A419DA89F7A66 /* CoKeep.app */,
+				11D8763CFCC64B01B17F6EB5 /* Localizable.strings */,
 			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
-		2649902B54A74C2EBFA596A7 /* Main */ = {
-			isa = PBXGroup;
-			children = (
-				D9E8F780F55947DB99A28A36 /* CoKeep */,
-				002B27CE2394401EA95F13A4 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		11D8763CFCC64B01B17F6EB5 /* Localizable.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				9E27D8E56C394C2FAAD3840A /* en */,
-				1BE4B20B0D134957A77BD842 /* nb */,
-			);
-			name = Localizable.strings;
-			sourceTree = "<group>";
-		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
 		FE29FD7982DD4667A54362A3 /* CoKeep */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4DFBC277BBF6458698E39D5D /* Build configuration list for PBXNativeTarget "CoKeep" */;
 			buildPhases = (
+				85348F11FC0A92EB75DD4622 /* [CP] Check Pods Manifest.lock */,
 				FE33901B2FAE41899B532D85 /* Sources */,
 				0F23A4C919324078A5182047 /* Frameworks */,
 				CD84EE247A6144328335AA63 /* Resources */,
+				8272A56BF029C3CAB77300C2 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -209,6 +251,9 @@
 			productReference = E79996CFCA9A419DA89F7A66 /* CoKeep.app */;
 			productType = "com.apple.product-type.application";
 		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
 		46074648DE1A4D428378739D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
@@ -226,18 +271,76 @@
 				Base,
 			);
 			mainGroup = 2649902B54A74C2EBFA596A7;
-			productRefGroup = 002B27CE2394401EA95F13A4 /* Products */;
+			productRefGroup = 002B27CE2394401EA95F13A4 /*  */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				FE29FD7982DD4667A54362A3 /* CoKeep */,
 			);
 		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CD84EE247A6144328335AA63 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				85B7809A6E63473382A1BE27 /* Assets.xcassets in Resources */,
+				39DC7FC2361449AF8F0D6F5E /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8272A56BF029C3CAB77300C2 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CoKeep/Pods-CoKeep-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CoKeep/Pods-CoKeep-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CoKeep/Pods-CoKeep-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		85348F11FC0A92EB75DD4622 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-CoKeep-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
 		FE33901B2FAE41899B532D85 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				96087DFB2AFD431886F4C42C /* CoKeepApp.swift in Sources */,
+				F1A2B3C4D5E60718293A4B5D /* AppDelegate.swift in Sources */,
 				458BE09D2481483993ACFF5A /* RootView.swift in Sources */,
 				60B672C8AE6F417A928EC4BD /* Models.swift in Sources */,
 				314BAD6F01D74BACB56C5F01 /* APIClient.swift in Sources */,
@@ -256,26 +359,96 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0F23A4C919324078A5182047 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		11D8763CFCC64B01B17F6EB5 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9E27D8E56C394C2FAAD3840A /* en */,
+				1BE4B20B0D134957A77BD842 /* nb */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+			name = Localizable.strings;
+			sourceTree = "<group>";
 		};
-		CD84EE247A6144328335AA63 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				85B7809A6E63473382A1BE27 /* Assets.xcassets in Resources */,
-				39DC7FC2361449AF8F0D6F5E /* Localizable.strings in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		7CE02F30B6264E4CADEEA996 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8FFA025F1A3ACEC1E5E9526E /* Pods-CoKeep.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CoKeep/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.cokeep.CoKeep;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		8D04D06EA11F4A0B8E7EFE62 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA3B8E99E53C45B79A883423 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E9E300892FA0E18EEC00DFC1 /* Pods-CoKeep.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CoKeep/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.cokeep.CoKeep;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
 		};
 		DB138936065E4DB8A0780AE8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -289,83 +462,20 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-
 			};
 			name = Debug;
 		};
-		8D04D06EA11F4A0B8E7EFE62 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
+/* End XCBuildConfiguration section */
 
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				VALIDATE_PRODUCT = YES;
-
-			};
-			name = Release;
-		};
-		7CE02F30B6264E4CADEEA996 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = CoKeep/Info.plist;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.cokeep.CoKeep;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-
-			};
-			name = Debug;
-		};
-		AA3B8E99E53C45B79A883423 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = CoKeep/Info.plist;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = app.cokeep.CoKeep;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-
-			};
-			name = Release;
+/* Begin XCConfigurationList section */
+		4DFBC277BBF6458698E39D5D /* Build configuration list for PBXNativeTarget "CoKeep" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7CE02F30B6264E4CADEEA996 /* Debug */,
+				AA3B8E99E53C45B79A883423 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		DB08DE85BD2646E08336A233 /* Build configuration list for PBXProject "CoKeep" */ = {
 			isa = XCConfigurationList;
@@ -376,15 +486,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4DFBC277BBF6458698E39D5D /* Build configuration list for PBXNativeTarget "CoKeep" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7CE02F30B6264E4CADEEA996 /* Debug */,
-				AA3B8E99E53C45B79A883423 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+/* End XCConfigurationList section */
 	};
 	rootObject = 46074648DE1A4D428378739D /* Project object */;
 }

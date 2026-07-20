@@ -20,4 +20,22 @@ enum L10n {
     static func string(_ key: String) -> String {
         NSLocalizedString(key, comment: "")
     }
+
+    /// Localizes default cabin todo list names stored in English in the database.
+    static func todoListName(_ rawName: String) -> String {
+        switch rawName {
+        case "Maintenance":
+            return string("todos.list.maintenance")
+        case "Seasonal":
+            return string("todos.list.seasonal")
+        case "Shopping":
+            return string("todos.list.shopping")
+        default:
+            return rawName
+        }
+    }
+
+    static func inviteSmsBody(inviterName: String, objectName: String, link: String) -> String {
+        String(format: string("invite.smsBody"), inviterName, objectName, link)
+    }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct CoKeepApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var session = SessionStore()
     @StateObject private var localization = LocalizationStore()
 

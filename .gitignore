@@ -19,6 +19,7 @@ DerivedData/
 
 # iOS
 ios/CoKeep/Pods/
+ios/CoKeep/CoKeep/GoogleService-Info.plist
 ios/**/*.xcworkspace/xcuserdata/
 *.ipa
 *.dSYM.zip

@@ -1,10 +1,13 @@
 import SwiftUI
+import PhotosUI
 
 struct ObjectDetailView: View {
     let objectId: String
     @State private var object: SharedObject?
     @State private var selectedTab = 0
     @State private var showInvite = false
+    @State private var photoItem: PhotosPickerItem?
+    @State private var uploadingImage = false
 
     var body: some View {
         ZStack {
@@ -55,14 +58,16 @@ struct ObjectDetailView: View {
         .sheet(isPresented: $showInvite) {
             InviteUserView(objectId: objectId)
         }
+        .onChange(of: photoItem) { _, item in
+            Task { await updateImage(item) }
+        }
         .task { await load() }
     }
 
+    @ViewBuilder
     private func header(_ object: SharedObject) -> some View {
         HStack(spacing: 14) {
-            ObjectImage(url: object.imageUrl, template: object.template)
-                .frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            objectHeaderImage(object)
             VStack(alignment: .leading, spacing: 2) {
                 Text(object.name)
                     .font(Theme.brandFont(size: 24))
@@ -75,6 +80,79 @@ struct ObjectDetailView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
+    }
+
+    @ViewBuilder
+    private func objectHeaderImage(_ object: SharedObject) -> some View {
+        let imageView = ObjectImage(url: object.imageUrl, template: object.template)
+            .frame(width: 56, height: 56)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay {
+                if uploadingImage {
+                    ProgressView()
+                }
+            }
+
+        if object.role == "OWNER" {
+            imageView
+                .overlay(alignment: .bottomTrailing) {
+                    Image(systemName: "camera.fill")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(5)
+                        .background(Circle().fill(Theme.accent))
+                        .offset(x: 4, y: 4)
+                }
+                .overlay {
+                    PhotosPicker(selection: $photoItem, matching: .images) {
+                        Color.clear
+                    }
+                }
+                .contextMenu {
+                    if object.imageUrl != nil {
+                        Button(L10n.string("objects.removePhoto"), role: .destructive) {
+                            Task { await setImageUrl(nil) }
+                        }
+                    }
+                }
+        } else {
+            imageView
+        }
+    }
+
+    private func updateImage(_ item: PhotosPickerItem?) async {
+        guard let item, let data = try? await item.loadTransferable(type: Data.self) else { return }
+        uploadingImage = true
+        defer {
+            uploadingImage = false
+            photoItem = nil
+        }
+        do {
+            let url = try await APIClient.shared.uploadImage(data)
+            await setImageUrl(url)
+        } catch {
+            // keep previous image
+        }
+    }
+
+    private func setImageUrl(_ url: String?) async {
+        struct Body: Encodable {
+            let imageUrl: String?
+        }
+        struct Resp: Codable { let object: SharedObject }
+        do {
+            let resp: Resp = try await APIClient.shared.request(
+                "PATCH",
+                path: "api/objects/\(objectId)",
+                body: Body(imageUrl: url)
+            )
+            var updated = resp.object
+            updated.role = object?.role ?? updated.role
+            updated.members = object?.members ?? updated.members
+            object = updated
+        } catch {
+            // keep previous
+        }
     }
 
     private func load() async {
@@ -159,12 +237,14 @@ import ContactsUI
 struct InviteUserView: View {
     let objectId: String
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SessionStore
     @State private var country = CountryCode.common[0]
     @State private var phone = ""
     @State private var message: String?
     @State private var error: String?
     @State private var loading = false
     @State private var showContacts = false
+    @State private var objectName = ""
 
     var body: some View {
         NavigationStack {
@@ -214,7 +294,16 @@ struct InviteUserView: View {
                     showContacts = false
                 }
             }
+            .task { await loadObjectName() }
         }
+    }
+
+    private func loadObjectName() async {
+        do {
+            struct Resp: Codable { let object: SharedObject }
+            let resp: Resp = try await APIClient.shared.request("GET", path: "api/objects/\(objectId)")
+            objectName = resp.object.name
+        } catch {}
     }
 
     private func send() async {
@@ -228,6 +317,7 @@ struct InviteUserView: View {
             struct Resp: Codable {
                 struct InviteResult: Codable {
                     let recipientExists: Bool
+                    let inviteUrl: String?
                 }
                 let invite: InviteResult
             }
@@ -236,12 +326,31 @@ struct InviteUserView: View {
                 path: "api/invites/objects/\(objectId)/invites",
                 body: Body(phone: phone, countryCode: country.code)
             )
-            message = resp.invite.recipientExists
-                ? L10n.string("invite.sentPush")
-                : L10n.string("invite.sentSms")
+            if resp.invite.recipientExists {
+                message = L10n.string("invite.sentPush")
+            } else if let inviteUrl = resp.invite.inviteUrl {
+                let inviterName = session.user?.firstName ?? L10n.string("invite.someone")
+                let body = L10n.inviteSmsBody(
+                    inviterName: inviterName,
+                    objectName: objectName.isEmpty ? L10n.string("invite.objectFallback") : objectName,
+                    link: inviteUrl
+                )
+                openSms(phone: phone, body: body)
+                message = L10n.string("invite.sentSms")
+            }
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func openSms(phone: String, body: String) {
+        let digits = phone.filter { $0.isNumber || $0 == "+" }
+        var components = URLComponents()
+        components.scheme = "sms"
+        components.path = digits
+        components.queryItems = [URLQueryItem(name: "body", value: body)]
+        guard let url = components.url else { return }
+        UIApplication.shared.open(url)
     }
 }
 

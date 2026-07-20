@@ -34,10 +34,7 @@ export const config = {
     authToken: process.env.TWILIO_AUTH_TOKEN || "",
     fromNumber: process.env.TWILIO_FROM_NUMBER || "",
   },
-  apns: {
-    keyId: process.env.APNS_KEY_ID || "",
-    teamId: process.env.APNS_TEAM_ID || "",
-    bundleId: process.env.APNS_BUNDLE_ID ?? "app.cokeep.CoKeep",
-    keyPath: process.env.APNS_KEY_PATH || "",
+  fcm: {
+    credentialsPath: process.env.FCM_CREDENTIALS_PATH || "",
   },
 };

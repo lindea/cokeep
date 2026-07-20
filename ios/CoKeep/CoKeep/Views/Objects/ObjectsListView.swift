@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct ObjectsListView: View {
     @State private var objects: [SharedObject] = []
@@ -168,6 +169,8 @@ struct CreateObjectView: View {
 
     @State private var name = ""
     @State private var template = "CABIN"
+    @State private var photoItem: PhotosPickerItem?
+    @State private var pickedImageData: Data?
     @State private var loading = false
     @State private var error: String?
 
@@ -176,6 +179,33 @@ struct CreateObjectView: View {
             ZStack {
                 Theme.background.ignoresSafeArea()
                 Form {
+                    Section {
+                        HStack {
+                            Spacer()
+                            VStack(spacing: 12) {
+                                objectPhotoPreview
+                                PhotosPicker(selection: $photoItem, matching: .images) {
+                                    Text(
+                                        pickedImageData == nil
+                                            ? L10n.string("objects.addPhoto")
+                                            : L10n.string("objects.changePhoto")
+                                    )
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.accent)
+                                }
+                                if pickedImageData != nil {
+                                    Button(L10n.string("objects.removePhoto"), role: .destructive) {
+                                        pickedImageData = nil
+                                        photoItem = nil
+                                    }
+                                    .font(.caption)
+                                }
+                            }
+                            Spacer()
+                        }
+                        .listRowBackground(Color.clear)
+                    }
+
                     Section {
                         TextField(L10n.string("objects.name"), text: $name)
                     }
@@ -203,22 +233,54 @@ struct CreateObjectView: View {
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || loading)
                 }
             }
+            .onChange(of: photoItem) { _, item in
+                Task { await loadPickedImage(item) }
+            }
         }
+    }
+
+    @ViewBuilder
+    private var objectPhotoPreview: some View {
+        Group {
+            if let pickedImageData, let uiImage = UIImage(data: pickedImageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ObjectImage(url: nil, template: template)
+            }
+        }
+        .frame(width: 96, height: 96)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func loadPickedImage(_ item: PhotosPickerItem?) async {
+        guard let item else {
+            pickedImageData = nil
+            return
+        }
+        pickedImageData = try? await item.loadTransferable(type: Data.self)
     }
 
     private func save() async {
         loading = true
         defer { loading = false }
         do {
+            var imageUrl: String?
+            if let pickedImageData {
+                imageUrl = try await APIClient.shared.uploadImage(pickedImageData)
+            }
+
             struct Body: Encodable {
                 let name: String
                 let template: String
+                let imageUrl: String?
             }
             struct Resp: Codable { let object: SharedObject }
             let _: Resp = try await APIClient.shared.request(
                 "POST",
                 path: "api/objects",
-                body: Body(name: name, template: template)
+                body: Body(name: name, template: template, imageUrl: imageUrl)
             )
             onDone()
             dismiss()

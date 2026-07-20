@@ -6,7 +6,6 @@ import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { requireObjectMember, requireObjectOwner } from "../services/access";
 import { notifyUser } from "../services/push";
-import { sendSms } from "../services/sms";
 import { normalizePhone, publicUser } from "../utils/helpers";
 
 const router = Router();
@@ -61,9 +60,11 @@ router.post("/objects/:objectId/invites", async (req: AuthenticatedRequest, res,
       },
     });
 
+    const inviteUrl = `${config.appStoreUrl}?invite=${invite.token}`;
+
     if (existingUser) {
       await notifyUser(existingUser.id, "INVITE", {
-        title: "Object invitation",
+        title: "CoKeep",
         body: `${inviter.firstName} invited you to join “${object.name}”`,
         data: {
           type: "invite",
@@ -71,12 +72,6 @@ router.post("/objects/:objectId/invites", async (req: AuthenticatedRequest, res,
           objectId: object.id,
         },
       });
-    } else {
-      const link = `${config.appStoreUrl}?invite=${invite.token}`;
-      await sendSms(
-        phoneE164,
-        `${inviter.firstName} invited you to collaborate on “${object.name}” in CoKeep. Install the app: ${link}`
-      );
     }
 
     res.status(201).json({
@@ -85,6 +80,7 @@ router.post("/objects/:objectId/invites", async (req: AuthenticatedRequest, res,
         phoneE164: invite.phoneE164,
         status: invite.status,
         recipientExists: Boolean(existingUser),
+        inviteUrl: existingUser ? null : inviteUrl,
         createdAt: invite.createdAt,
       },
     });

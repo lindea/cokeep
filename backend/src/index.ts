@@ -6,6 +6,7 @@ import path from "path";
 import rateLimit from "express-rate-limit";
 import { config } from "./config/env";
 import { startNotificationJobs } from "./jobs/notifications";
+import { initPushService } from "./services/push";
 import { errorHandler, notFound } from "./middleware/error";
 import authRoutes from "./routes/auth";
 import costsRoutes from "./routes/costs";
@@ -67,6 +68,8 @@ a{color:#0B5FFF}</style></head>
 
 app.use(notFound);
 app.use(errorHandler);
+
+initPushService();
 
 app.listen(config.port, () => {
   console.log(`CoKeep API listening on :${config.port}`);

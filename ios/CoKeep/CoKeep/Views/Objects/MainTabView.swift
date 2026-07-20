@@ -24,5 +24,10 @@ struct MainTabView: View {
                 .tag(2)
         }
         .tint(Theme.accent)
+        .onAppear {
+            PushNotificationRegistrar.onOpenInvites = {
+                selected = 1
+            }
+        }
     }
 }
