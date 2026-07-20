@@ -29,10 +29,15 @@ type LaunchMessageRow = {
   versionA: string | null;
   versionB: string | null;
   updateUrl: string | null;
+  expiresAt: Date | null;
   sortOrder: number;
   updatedAt: Date;
   createdAt: Date;
 };
+
+function isExpired(row: { expiresAt: Date | null }, now = new Date()): boolean {
+  return row.expiresAt != null && row.expiresAt.getTime() <= now.getTime();
+}
 
 function localizedContent(row: LaunchMessageRow, lang: "en" | "nb") {
   if (lang === "nb") {
@@ -61,6 +66,8 @@ function adminShape(row: LaunchMessageRow) {
     versionA: row.versionA,
     versionB: row.versionB,
     updateUrl: row.updateUrl ?? config.appStoreUrl,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
+    expired: isExpired(row),
     sortOrder: row.sortOrder,
     updatedAt: row.updatedAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
@@ -87,6 +94,7 @@ function publicShape(row: LaunchMessageRow, lang: "en" | "nb") {
     versionA: row.versionA,
     versionB: row.versionB,
     updateUrl: row.updateUrl ?? config.appStoreUrl,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
     sortOrder: row.sortOrder,
     updatedAt: row.updatedAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
@@ -117,8 +125,12 @@ router.get("/launch-messages", async (req, res, next) => {
       typeof fromHeader === "string" ? fromHeader.split(",")[0]?.trim() : undefined;
     const lang = normalizeAppLang(fromQuery || headerLang);
 
+    const now = new Date();
     const rows = await prisma.appLaunchMessage.findMany({
-      where: { enabled: true },
+      where: {
+        enabled: true,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
     });
 
     const filtered = iosVersion
@@ -199,6 +211,22 @@ const messageBodySchema = z
       .nullable()
       .optional()
       .transform((v) => (v && v.trim() ? v.trim() : null)),
+    expiresAt: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v, ctx) => {
+        if (v == null || !String(v).trim()) return null;
+        const parsed = new Date(String(v).trim());
+        if (Number.isNaN(parsed.getTime())) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Invalid expiresAt datetime",
+          });
+          return z.NEVER;
+        }
+        return parsed;
+      }),
     sortOrder: z.number().int().min(0).max(9999).optional().default(0),
   })
   .superRefine((data, ctx) => {
@@ -250,6 +278,7 @@ router.post(
           versionA: body.versionA,
           versionB: body.versionOp === "BETWEEN" ? body.versionB : null,
           updateUrl: body.updateUrl,
+          expiresAt: body.expiresAt,
           sortOrder: body.sortOrder,
         },
       });
@@ -280,6 +309,7 @@ router.put(
           versionA: body.versionA,
           versionB: body.versionOp === "BETWEEN" ? body.versionB : null,
           updateUrl: body.updateUrl,
+          expiresAt: body.expiresAt,
           sortOrder: body.sortOrder,
         },
       });

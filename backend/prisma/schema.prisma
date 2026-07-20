@@ -286,10 +286,13 @@ model AppLaunchMessage {
   /** Upper bound for BETWEEN (inclusive). */
   versionB         String?
   updateUrl        String?
+  /** When set, message is hidden after this time (UTC). Null = no expiry. */
+  expiresAt        DateTime?
   /** Lower sortOrder is shown first when multiple messages match. */
   sortOrder        Int             @default(0)
   updatedAt        DateTime        @updatedAt
   createdAt        DateTime        @default(now())
 
   @@index([enabled, sortOrder])
+  @@index([expiresAt])
 }

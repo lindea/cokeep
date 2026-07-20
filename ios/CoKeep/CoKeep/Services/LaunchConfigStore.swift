@@ -23,8 +23,18 @@ struct AppLaunchMessage: Codable, Equatable, Identifiable {
     var versionA: String?
     var versionB: String?
     var updateUrl: String?
+    var expiresAt: String?
     var sortOrder: Int
     var updatedAt: String
+
+    /// True when expiresAt is set and is not in the future.
+    var isExpired: Bool {
+        guard let expiresAt,
+              let date = ISO8601DateFormatter.launchExpires.date(from: expiresAt)
+                ?? ISO8601DateFormatter.launchExpiresFractional.date(from: expiresAt)
+        else { return false }
+        return date <= Date()
+    }
 
     /// Picks EN/NB the same way as the rest of the app (`L10n.appLanguageCode`).
     func localizedForApp() -> AppLaunchMessage {
@@ -52,6 +62,20 @@ struct AppLaunchMessage: Codable, Equatable, Identifiable {
 private struct LaunchMessagesResponse: Codable {
     let messages: [AppLaunchMessage]
     let defaultUpdateUrl: String?
+}
+
+private extension ISO8601DateFormatter {
+    static let launchExpires: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    static let launchExpiresFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
 }
 
 @MainActor
@@ -147,7 +171,11 @@ final class LaunchConfigStore: ObservableObject {
         installed: String
     ) -> [AppLaunchMessage] {
         messages
-            .filter { $0.enabled && AppVersion.matches(installed, op: $0.versionOp, a: $0.versionA, b: $0.versionB) }
+            .filter {
+                $0.enabled
+                    && !$0.isExpired
+                    && AppVersion.matches(installed, op: $0.versionOp, a: $0.versionA, b: $0.versionB)
+            }
             .sorted { lhs, rhs in
                 if lhs.forceUpdate != rhs.forceUpdate { return lhs.forceUpdate && !rhs.forceUpdate }
                 if lhs.sortOrder != rhs.sortOrder { return lhs.sortOrder < rhs.sortOrder }

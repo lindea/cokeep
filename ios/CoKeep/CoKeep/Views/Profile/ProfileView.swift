@@ -76,6 +76,7 @@ struct ProfileView: View {
 
     private func uploadAvatar(_ item: PhotosPickerItem?) async {
         guard let item else { return }
+        let previousURL = session.user?.avatarUrl.flatMap(URL.init(string:))
         do {
             let data = try await item.jpegDataForUpload()
             let url = try await APIClient.shared.uploadImage(data)
@@ -85,6 +86,9 @@ struct ProfileView: View {
                 email: email,
                 avatarUrl: url
             )
+            if let previousURL {
+                await ImageCache.shared.remove(for: previousURL)
+            }
             message = L10n.string("profile.saved")
             error = nil
         } catch {
@@ -114,19 +118,10 @@ struct AvatarView: View {
     var size: CGFloat = 40
 
     var body: some View {
-        Group {
-            if let url = user.avatarUrl, let imageURL = URL(string: url) {
-                AsyncImage(url: imageURL) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().scaledToFill()
-                    default:
-                        initials
-                    }
-                }
-            } else {
-                initials
-            }
+        CachedRemoteImage(url: user.avatarUrl.flatMap(URL.init(string:))) { image in
+            image.resizable().scaledToFill()
+        } placeholder: {
+            initials
         }
         .frame(width: size, height: size)
         .clipShape(Circle())

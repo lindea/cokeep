@@ -215,9 +215,14 @@
             <input id="sortOrder" type="number" min="0" max="9999" value="0" />
           </div>
           <div>
-            <label for="updateUrl">Update URL (App Store)</label>
-            <input id="updateUrl" type="text" placeholder="https://apps.apple.com/…" />
+            <label for="expiresAt">Expires (optional)</label>
+            <input id="expiresAt" type="datetime-local" />
+            <p class="hint">Leave empty for no expiry. Expired messages are not shown in the app.</p>
           </div>
+        </div>
+        <div>
+          <label for="updateUrl">Update URL (App Store)</label>
+          <input id="updateUrl" type="text" placeholder="https://apps.apple.com/…" />
         </div>
         <div class="actions">
           <button type="button" class="btn-primary" id="save-btn">Save</button>
@@ -359,14 +364,18 @@
         const el = document.createElement("div");
         el.className = "list-item" + (m.id === activeId ? " active" : "");
         const hasNb = !!(m.titleNb || m.bodyMarkdownNb);
+        const expired = !!m.expired;
         el.innerHTML =
           "<div><div>" +
           (m.enabled ? '<span class="badge">On</span>' : '<span class="badge off">Off</span>') +
+          (expired ? '<span class="badge force">Expired</span>' : "") +
           (m.forceUpdate ? '<span class="badge force">Force update</span>' : "") +
           (m.blocking ? '<span class="badge">Blocking</span>' : "") +
           (hasNb ? '<span class="badge">EN+NB</span>' : '<span class="badge off">EN</span>') +
           "<strong>" + listTitle(m) + "</strong></div>" +
-          '<div class="meta">' + versionLabel(m) + " · priority " + m.sortOrder + "</div></div>";
+          '<div class="meta">' + versionLabel(m) + " · priority " + m.sortOrder +
+          (m.expiresAt ? " · expires " + new Date(m.expiresAt).toLocaleString() : "") +
+          "</div></div>";
         el.onclick = () => fillForm(m);
         list.appendChild(el);
       });
@@ -386,6 +395,7 @@
       $("versionA").value = "";
       $("versionB").value = "";
       $("sortOrder").value = "0";
+      $("expiresAt").value = "";
       $("updateUrl").value = "";
       $("delete-btn").classList.add("hidden");
       $("save-msg").textContent = "";
@@ -409,6 +419,7 @@
       $("versionA").value = m.versionA || "";
       $("versionB").value = m.versionB || "";
       $("sortOrder").value = String(m.sortOrder ?? 0);
+      $("expiresAt").value = toDatetimeLocalValue(m.expiresAt);
       $("updateUrl").value = m.updateUrl || "";
       $("delete-btn").classList.remove("hidden");
       $("save-msg").textContent = "";
@@ -418,7 +429,19 @@
       renderList();
     }
 
+    function toDatetimeLocalValue(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      const pad = (n) => String(n).padStart(2, "0");
+      return (
+        d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+        "T" + pad(d.getHours()) + ":" + pad(d.getMinutes())
+      );
+    }
+
     function formPayload() {
+      const expiresRaw = $("expiresAt").value;
       return {
         enabled: $("enabled").checked,
         blocking: $("blocking").checked,
@@ -432,6 +455,7 @@
         versionB: $("versionB").value || null,
         sortOrder: Number($("sortOrder").value || 0),
         updateUrl: $("updateUrl").value || null,
+        expiresAt: expiresRaw ? new Date(expiresRaw).toISOString() : null,
       };
     }
 

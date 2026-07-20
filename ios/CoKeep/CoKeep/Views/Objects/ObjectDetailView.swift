@@ -165,6 +165,7 @@ struct ObjectDetailView: View {
             let imageUrl: String?
         }
         struct Resp: Codable { let object: SharedObject }
+        let previousURL = object?.imageUrl.flatMap(URL.init(string:))
         do {
             let resp: Resp = try await APIClient.shared.request(
                 "PATCH",
@@ -175,6 +176,9 @@ struct ObjectDetailView: View {
             updated.role = object?.role ?? updated.role
             updated.members = object?.members ?? updated.members
             object = updated
+            if let previousURL {
+                await ImageCache.shared.remove(for: previousURL)
+            }
         } catch {
             // keep previous
         }

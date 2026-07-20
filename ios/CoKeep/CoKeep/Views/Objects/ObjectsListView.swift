@@ -133,19 +133,10 @@ struct ObjectImage: View {
     let template: String
 
     var body: some View {
-        Group {
-            if let url, let imageURL = URL(string: url) {
-                AsyncImage(url: imageURL) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image.resizable().scaledToFill()
-                    default:
-                        placeholder
-                    }
-                }
-            } else {
-                placeholder
-            }
+        CachedRemoteImage(url: url.flatMap(URL.init(string:))) { image in
+            image.resizable().scaledToFill()
+        } placeholder: {
+            placeholder
         }
     }
 

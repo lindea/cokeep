@@ -24,6 +24,8 @@
 		B1A2C3D4E5F60718293A4B5C /* BadgeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E60718293A4B5C /* BadgeStore.swift */; };
 		C21A2930503A4CB88B86B291 /* ObjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7F3366E4374906A043077E /* ObjectDetailView.swift */; };
 		D2E3F4A5B6C70819293A4B5C /* PhotoPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F3A4B5C6D70819293A4B5C /* PhotoPickerLoader.swift */; };
+		A1B2C3D4E5F60718293A4B63 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */; };
+		A1B2C3D4E5F60718293A4B64 /* CachedRemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */; };
 		D40D59B37005483D8FCBEBC9 /* TodoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02824302E7AD43A792AAD411 /* TodoViews.swift */; };
 		E03463ABFB214CBD81427B3A /* ObjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652C0E32263840988193DD29 /* ObjectsListView.swift */; };
 		F1A2B3C4D5E60718293A4B5D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */; };
@@ -55,6 +57,8 @@
 		DE7F3366E4374906A043077E /* ObjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetailView.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E2F3A4B5C6D70819293A4B5C /* PhotoPickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPickerLoader.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedRemoteImage.swift; sourceTree = "<group>"; };
 		E79996CFCA9A419DA89F7A66 /* CoKeep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CoKeep.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA2B9D49CCC54F4A9D0B647D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		F3A4B5C6D7E8091A2B3C4D5F /* LaunchConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchConfigStore.swift; sourceTree = "<group>"; };
@@ -158,6 +162,8 @@
 				839F300E9B184C1395CE10AA /* Theme.swift */,
 				7153F225A0E04800A0304FEF /* L10n.swift */,
 				E2F3A4B5C6D70819293A4B5C /* PhotoPickerLoader.swift */,
+				A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */,
+				A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -301,6 +307,8 @@
 				F3A4B5C6D7E8091A2B3C4D5E /* LaunchConfigStore.swift in Sources */,
 				A313FA10DA6F42CC80D2D5FB /* Theme.swift in Sources */,
 				D2E3F4A5B6C70819293A4B5C /* PhotoPickerLoader.swift in Sources */,
+				A1B2C3D4E5F60718293A4B63 /* ImageCache.swift in Sources */,
+				A1B2C3D4E5F60718293A4B64 /* CachedRemoteImage.swift in Sources */,
 				3B10436D337649BDA3D0759D /* L10n.swift in Sources */,
 				497273AD45CC47F8A8DCDD1B /* AuthViews.swift in Sources */,
 				F4A5B6C7D8E90A2B3C4D5E6F /* LaunchMessageView.swift in Sources */,
@@ -336,7 +344,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;
@@ -381,7 +389,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;
