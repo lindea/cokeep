@@ -6,6 +6,7 @@ import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { requireObjectMember, requireObjectOwner } from "../services/access";
 import { notifyUser } from "../services/push";
+import { markInviteNotificationsRead } from "../services/badge";
 import { normalizePhone, publicUser } from "../utils/helpers";
 
 const router = Router();
@@ -151,6 +152,7 @@ router.post("/:inviteId/respond", async (req: AuthenticatedRequest, res, next) =
         where: { id: invite.id },
         data: { status: "DECLINED", respondedAt: new Date(), recipientUserId: user.id },
       });
+      await markInviteNotificationsRead(user.id);
       res.json({ ok: true, accepted: false });
       return;
     }
@@ -178,6 +180,7 @@ router.post("/:inviteId/respond", async (req: AuthenticatedRequest, res, next) =
       }),
     ]);
 
+    await markInviteNotificationsRead(user.id);
     res.json({ ok: true, accepted: true, objectId: invite.objectId });
   } catch (err) {
     next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);

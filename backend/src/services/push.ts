@@ -4,6 +4,7 @@ import admin from "firebase-admin";
 import fs from "fs";
 import { prisma } from "../config/db";
 import { config } from "../config/env";
+import { getUnreadBadgeCount } from "./badge";
 
 interface PushPayload {
   title: string;
@@ -65,18 +66,6 @@ export function initPushService(): void {
   if (!apnsProvider && !messaging) {
     console.log("[push] No push credentials configured; notifications are logged only");
   }
-}
-
-async function countPendingInviteBadge(userId: string): Promise<number> {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return 0;
-
-  return prisma.invite.count({
-    where: {
-      status: "PENDING",
-      OR: [{ recipientUserId: userId }, { phoneE164: user.phoneE164 }],
-    },
-  });
 }
 
 function isStaleFcmTokenError(err: unknown): boolean {
@@ -171,7 +160,8 @@ export async function notifyUser(
     return;
   }
 
-  const badge = await countPendingInviteBadge(userId);
+  // Badge = unread notifications (including the one just created).
+  const badge = await getUnreadBadgeCount(userId);
   const data: Record<string, string> = {
     type: payload.data?.type ?? "general",
     badge: String(badge),

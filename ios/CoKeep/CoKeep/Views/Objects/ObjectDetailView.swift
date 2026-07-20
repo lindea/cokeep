@@ -3,11 +3,17 @@ import PhotosUI
 
 struct ObjectDetailView: View {
     let objectId: String
+    @Binding var deepLinkTodoItemId: String?
     @State private var object: SharedObject?
     @State private var selectedTab = 0
     @State private var showInvite = false
     @State private var photoItem: PhotosPickerItem?
     @State private var uploadingImage = false
+
+    init(objectId: String, deepLinkTodoItemId: Binding<String?> = .constant(nil)) {
+        self.objectId = objectId
+        self._deepLinkTodoItemId = deepLinkTodoItemId
+    }
 
     var body: some View {
         ZStack {
@@ -28,7 +34,7 @@ struct ObjectDetailView: View {
                     .padding(.vertical, 10)
 
                     TabView(selection: $selectedTab) {
-                        TodoListsView(objectId: objectId)
+                        TodoListsView(objectId: objectId, deepLinkTodoItemId: $deepLinkTodoItemId)
                             .tag(0)
                         CostsView(objectId: objectId)
                             .tag(1)
@@ -62,6 +68,11 @@ struct ObjectDetailView: View {
             Task { await updateImage(item) }
         }
         .task { await load() }
+        .onChange(of: deepLinkTodoItemId) { _, itemId in
+            if itemId != nil {
+                selectedTab = 0
+            }
+        }
     }
 
     @ViewBuilder
@@ -425,7 +436,10 @@ struct PendingInvitesView: View {
                 }
             }
             .navigationTitle(L10n.string("tab.invites"))
-            .task { await load() }
+            .task {
+                await load()
+                await BadgeStore.shared.markInvitesViewed()
+            }
             .refreshable { await load() }
         }
     }
@@ -437,6 +451,7 @@ struct PendingInvitesView: View {
             struct Resp: Codable { let invites: [Invite] }
             let resp: Resp = try await APIClient.shared.request("GET", path: "api/invites/pending")
             invites = resp.invites
+            await BadgeStore.shared.refresh()
         } catch {}
     }
 
@@ -450,6 +465,7 @@ struct PendingInvitesView: View {
                 body: Body(accept: accept)
             )
             await load()
+            await BadgeStore.shared.refresh()
         } catch {}
     }
 }

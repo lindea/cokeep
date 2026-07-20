@@ -6,6 +6,7 @@ import UserNotifications
 @MainActor
 enum PushNotificationRegistrar {
     static var onOpenInvites: (() -> Void)?
+    static var onOpenTodo: ((String, String) -> Void)?
 
     static func requestAuthorization() async {
         let center = UNUserNotificationCenter.current()
@@ -42,8 +43,25 @@ enum PushNotificationRegistrar {
 
     static func handleNotificationTap(_ userInfo: [AnyHashable: Any]) {
         let data = flatten(userInfo)
-        guard data["type"] == "invite" else { return }
-        onOpenInvites?()
+        let type = data["type"] ?? ""
+        switch type {
+        case "invite":
+            onOpenInvites?()
+        case "todo_due_soon", "todo_overdue":
+            if let objectId = data["objectId"], let todoItemId = data["todoItemId"] {
+                onOpenTodo?(objectId, todoItemId)
+            }
+        default:
+            break
+        }
+        Task { await BadgeStore.shared.refresh() }
+    }
+
+    static func handleForegroundPush(_ userInfo: [AnyHashable: Any]) {
+        if let badgeString = flatten(userInfo)["badge"], let badge = Int(badgeString) {
+            UIApplication.shared.applicationIconBadgeNumber = badge
+        }
+        Task { await BadgeStore.shared.refresh() }
     }
 
     private static func flatten(_ userInfo: [AnyHashable: Any]) -> [String: String] {

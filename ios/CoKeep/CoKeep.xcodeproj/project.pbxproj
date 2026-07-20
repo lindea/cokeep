@@ -20,6 +20,7 @@
 		96087DFB2AFD431886F4C42C /* CoKeepApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */; };
 		9DD95106E93741BFB89A0A89 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* PushNotificationRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */; };
+		B1A2C3D4E5F60718293A4B5C /* BadgeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E60718293A4B5C /* BadgeStore.swift */; };
 		A313FA10DA6F42CC80D2D5FB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839F300E9B184C1395CE10AA /* Theme.swift */; };
 		C21A2930503A4CB88B86B291 /* ObjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7F3366E4374906A043077E /* ObjectDetailView.swift */; };
 		D40D59B37005483D8FCBEBC9 /* TodoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02824302E7AD43A792AAD411 /* TodoViews.swift */; };
@@ -44,6 +45,7 @@
 		9E27D8E56C394C2FAAD3840A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationRegistrar.swift; sourceTree = "<group>"; };
+		C1A2B3C4D5E60718293A4B5C /* BadgeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeStore.swift; sourceTree = "<group>"; };
 		B5F111F76F8346CD889084AF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C94C26E4E0BC4FC28B17FB69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D1E2F3A4B5C60718293A4B5E /* CoKeep.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CoKeep.entitlements; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 				226F4EC492974E00BC94BF36 /* APIClient.swift */,
 				89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */,
 				B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */,
+				C1A2B3C4D5E60718293A4B5C /* BadgeStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -277,6 +280,7 @@
 				314BAD6F01D74BACB56C5F01 /* APIClient.swift in Sources */,
 				9DD95106E93741BFB89A0A89 /* SessionStore.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5C /* PushNotificationRegistrar.swift in Sources */,
+				B1A2C3D4E5F60718293A4B5C /* BadgeStore.swift in Sources */,
 				A313FA10DA6F42CC80D2D5FB /* Theme.swift in Sources */,
 				3B10436D337649BDA3D0759D /* L10n.swift in Sources */,
 				497273AD45CC47F8A8DCDD1B /* AuthViews.swift in Sources */,

@@ -4,6 +4,7 @@ import { prisma } from "../config/db";
 import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { requireObjectMember, requireObjectOwner } from "../services/access";
+import { getUnreadAlertSummary } from "../services/badge";
 import { publicUser } from "../utils/helpers";
 
 const router = Router();
@@ -15,25 +16,29 @@ const GENERIC_DEFAULT_LISTS = ["To-do"];
 
 router.get("/", async (req: AuthenticatedRequest, res, next) => {
   try {
-    const memberships = await prisma.objectMembership.findMany({
-      where: { userId: req.user!.userId, status: "ACTIVE" },
-      include: {
-        object: {
-          include: {
-            members: {
-              where: { status: "ACTIVE" },
-              include: { user: true },
+    const [memberships, alertSummary] = await Promise.all([
+      prisma.objectMembership.findMany({
+        where: { userId: req.user!.userId, status: "ACTIVE" },
+        include: {
+          object: {
+            include: {
+              members: {
+                where: { status: "ACTIVE" },
+                include: { user: true },
+              },
             },
           },
         },
-      },
-      orderBy: { joinedAt: "desc" },
-    });
+        orderBy: { joinedAt: "desc" },
+      }),
+      getUnreadAlertSummary(req.user!.userId),
+    ]);
 
     res.json({
       objects: memberships.map((m) => ({
         ...m.object,
         role: m.role,
+        unreadAlertCount: alertSummary.byObject[m.object.id] ?? 0,
         members: m.object.members.map((mem) => ({
           id: mem.id,
           role: mem.role,

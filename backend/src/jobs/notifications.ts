@@ -27,6 +27,7 @@ export async function runDueNotifications(): Promise<void> {
       data: {
         type: "todo_due_soon",
         todoItemId: item.id,
+        listId: item.listId,
         objectId: item.list.objectId,
       },
     });
@@ -54,6 +55,7 @@ export async function runDueNotifications(): Promise<void> {
       data: {
         type: "todo_overdue",
         todoItemId: item.id,
+        listId: item.listId,
         objectId: item.list.objectId,
       },
     });

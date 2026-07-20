@@ -31,7 +31,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.badge])
+        PushNotificationRegistrar.handleForegroundPush(notification.request.content.userInfo)
+        completionHandler([.banner, .badge, .sound])
     }
 
     func userNotificationCenter(

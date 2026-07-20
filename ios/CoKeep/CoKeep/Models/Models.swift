@@ -26,6 +26,7 @@ struct SharedObject: Codable, Identifiable, Hashable {
     var template: String
     var imageUrl: String?
     var role: String?
+    var unreadAlertCount: Int?
     var members: [ObjectMember]?
     var todoLists: [TodoListSummary]?
 }
@@ -48,6 +49,7 @@ struct TodoList: Codable, Identifiable {
     var objectId: String
     var name: String
     var sortOrder: Int?
+    var unreadAlertCount: Int?
     var openItems: [TodoItem]
     var doneItems: [TodoItem]
 }
@@ -67,6 +69,7 @@ struct TodoItem: Codable, Identifiable, Hashable {
     var completedAt: String?
     var completedById: String?
     var totalWorkMinutes: Int?
+    var hasUnreadAlert: Bool?
     var logs: [WorkLogEntry]?
 }
 

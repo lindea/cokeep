@@ -2,9 +2,16 @@ import SwiftUI
 
 struct TodoListsView: View {
     let objectId: String
+    @Binding var deepLinkTodoItemId: String?
     @State private var lists: [TodoList] = []
     @State private var showNewList = false
     @State private var newListName = ""
+    @State private var pushedItem: Identified?
+
+    init(objectId: String, deepLinkTodoItemId: Binding<String?> = .constant(nil)) {
+        self.objectId = objectId
+        self._deepLinkTodoItemId = deepLinkTodoItemId
+    }
 
     var body: some View {
         ScrollView {
@@ -26,8 +33,27 @@ struct TodoListsView: View {
             }
             .padding(16)
         }
+        .sheet(item: $pushedItem) { item in
+            NavigationStack {
+                TodoItemDetailView(itemId: item.id) {
+                    Task { await load() }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(L10n.string("common.cancel")) {
+                            pushedItem = nil
+                        }
+                    }
+                }
+            }
+        }
         .task { await load() }
         .refreshable { await load() }
+        .onChange(of: deepLinkTodoItemId) { _, itemId in
+            guard let itemId else { return }
+            pushedItem = Identified(id: itemId)
+            deepLinkTodoItemId = nil
+        }
         .alert(L10n.string("todos.newList"), isPresented: $showNewList) {
             TextField(L10n.string("todos.listName"), text: $newListName)
             Button(L10n.string("common.cancel"), role: .cancel) {}
@@ -45,6 +71,10 @@ struct TodoListsView: View {
                 path: "api/objects/\(objectId)/todo-lists"
             )
             lists = resp.lists
+            if let itemId = deepLinkTodoItemId {
+                pushedItem = Identified(id: itemId)
+                deepLinkTodoItemId = nil
+            }
         } catch {}
     }
 
@@ -75,6 +105,9 @@ struct TodoListSection: View {
                 Text(L10n.todoListName(list.name))
                     .font(.system(.title3, design: .rounded).weight(.semibold))
                     .foregroundStyle(Theme.ink)
+                if let count = list.unreadAlertCount, count > 0 {
+                    AlertBadgeView(count: count)
+                }
                 Spacer()
                 Button {
                     showAdd = true
@@ -162,10 +195,15 @@ struct TodoItemRow: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.name)
-                    .font(.system(.body, design: .rounded).weight(.medium))
-                    .strikethrough(item.isDone)
-                    .foregroundStyle(dimmed ? Theme.muted : Theme.ink)
+                HStack(spacing: 6) {
+                    Text(item.name)
+                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .strikethrough(item.isDone)
+                        .foregroundStyle(dimmed ? Theme.muted : Theme.ink)
+                    if item.hasUnreadAlert == true {
+                        AlertDotView()
+                    }
+                }
                 HStack(spacing: 8) {
                     if let due = item.dueDate {
                         Label(formatDate(due), systemImage: "calendar")
@@ -365,7 +403,11 @@ struct TodoItemDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .task { await load() }
+        .task {
+            await load()
+            await BadgeStore.shared.markTodoViewed(itemId)
+            onChange()
+        }
         .sheet(isPresented: $showLog) {
             if item != nil {
                 LogWorkView(itemId: itemId) {
@@ -518,4 +560,8 @@ func formatDuration(_ minutes: Int) -> String {
     let m = minutes % 60
     if h == 0 { return "\(m)m" }
     return "\(h)h \(m)m"
+}
+
+private struct Identified: Identifiable, Hashable {
+    let id: String
 }

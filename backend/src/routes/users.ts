@@ -4,6 +4,11 @@ import { prisma } from "../config/db";
 import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
 import { publicUser } from "../utils/helpers";
+import {
+  getUnreadAlertSummary,
+  markInviteNotificationsRead,
+  markTodoNotificationsRead,
+} from "../services/badge";
 
 const router = Router();
 
@@ -78,6 +83,39 @@ router.get("/notifications", async (req: AuthenticatedRequest, res, next) => {
     res.json({ notifications });
   } catch (err) {
     next(err);
+  }
+});
+
+router.get("/badge", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const summary = await getUnreadAlertSummary(req.user!.userId);
+    res.json(summary);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/notifications/mark-read", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const body = z
+      .object({
+        todoItemId: z.string().uuid().optional(),
+        invites: z.boolean().optional(),
+      })
+      .parse(req.body);
+
+    let badge: number;
+    if (body.todoItemId) {
+      badge = await markTodoNotificationsRead(req.user!.userId, body.todoItemId);
+    } else if (body.invites) {
+      badge = await markInviteNotificationsRead(req.user!.userId);
+    } else {
+      throw new AppError(400, "Specify todoItemId or invites");
+    }
+
+    res.json({ badge });
+  } catch (err) {
+    next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
   }
 });
 

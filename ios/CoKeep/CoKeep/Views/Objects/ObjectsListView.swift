@@ -2,14 +2,17 @@ import SwiftUI
 import PhotosUI
 
 struct ObjectsListView: View {
+    @Binding var deepLinkObjectId: String?
+    @Binding var deepLinkTodoItemId: String?
     @State private var objects: [SharedObject] = []
     @State private var loading = true
     @State private var showCreate = false
     @State private var error: String?
     @State private var appear = false
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 Theme.background.ignoresSafeArea()
 
@@ -37,7 +40,13 @@ struct ObjectsListView: View {
             }
             .navigationTitle("CoKeep")
             .navigationDestination(for: SharedObject.self) { object in
-                ObjectDetailView(objectId: object.id)
+                ObjectDetailView(
+                    objectId: object.id,
+                    deepLinkTodoItemId: Binding(
+                        get: { deepLinkObjectId == object.id ? deepLinkTodoItemId : nil },
+                        set: { deepLinkTodoItemId = $0 }
+                    )
+                )
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -61,6 +70,11 @@ struct ObjectsListView: View {
                 withAnimation { appear = true }
             }
             .refreshable { await load() }
+            .onChange(of: deepLinkObjectId) { _, objectId in
+                guard let objectId, let object = objects.first(where: { $0.id == objectId }) else { return }
+                path = NavigationPath()
+                path.append(object)
+            }
         }
     }
 
@@ -71,6 +85,10 @@ struct ObjectsListView: View {
             struct Resp: Codable { let objects: [SharedObject] }
             let resp: Resp = try await APIClient.shared.request("GET", path: "api/objects")
             objects = resp.objects
+            await BadgeStore.shared.refresh()
+            if let objectId = deepLinkObjectId, let object = objects.first(where: { $0.id == objectId }) {
+                path.append(object)
+            }
         } catch {
             self.error = error.localizedDescription
         }
@@ -95,6 +113,9 @@ struct ObjectRow: View {
                     .foregroundStyle(Theme.muted)
             }
             Spacer()
+            if let count = object.unreadAlertCount, count > 0 {
+                AlertBadgeView(count: count)
+            }
             Image(systemName: "chevron.right")
                 .foregroundStyle(Theme.muted.opacity(0.6))
         }

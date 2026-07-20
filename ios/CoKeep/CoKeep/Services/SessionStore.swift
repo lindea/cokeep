@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UIKit
 
 @MainActor
 final class SessionStore: ObservableObject {
@@ -133,6 +134,7 @@ final class SessionStore: ObservableObject {
         APIClient.shared.authToken = nil
         user = nil
         isAuthenticated = false
+        UIApplication.shared.applicationIconBadgeNumber = 0
     }
 }
 

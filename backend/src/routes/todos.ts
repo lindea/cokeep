@@ -6,6 +6,7 @@ import { AppError } from "../middleware/error";
 import { getTodoItemForUser, requireObjectMember } from "../services/access";
 import { serializeTodoItem, totalWorkMinutes } from "../services/todoSerializer";
 import { minutesBetween, publicUser } from "../utils/helpers";
+import { getUnreadAlertSummary } from "../services/badge";
 
 const router = Router();
 
@@ -36,18 +37,22 @@ router.get(
   async (req: AuthenticatedRequest, res, next) => {
     try {
       await requireObjectMember(req.params.objectId, req.user!.userId);
-      const lists = await prisma.todoList.findMany({
-        where: { objectId: req.params.objectId },
-        include: {
-          items: {
-            include: {
-              assignee: true,
-              workLogs: true,
+      const [lists, alertSummary] = await Promise.all([
+        prisma.todoList.findMany({
+          where: { objectId: req.params.objectId },
+          include: {
+            items: {
+              include: {
+                assignee: true,
+                workLogs: true,
+              },
             },
           },
-        },
-        orderBy: { sortOrder: "asc" },
-      });
+          orderBy: { sortOrder: "asc" },
+        }),
+        getUnreadAlertSummary(req.user!.userId),
+      ]);
+      const unreadItemIds = new Set(alertSummary.unreadTodoItemIds);
 
       res.json({
         lists: lists.map((list) => {
@@ -65,13 +70,23 @@ router.get(
                 (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0)
             );
 
+          const openItems = open.map((item) => ({
+            ...serializeTodoItem(item),
+            hasUnreadAlert: unreadItemIds.has(item.id),
+          }));
+          const doneItems = done.map((item) => ({
+            ...serializeTodoItem(item),
+            hasUnreadAlert: unreadItemIds.has(item.id),
+          }));
+
           return {
             id: list.id,
             objectId: list.objectId,
             name: list.name,
             sortOrder: list.sortOrder,
-            openItems: open.map(serializeTodoItem),
-            doneItems: done.map(serializeTodoItem),
+            unreadAlertCount: openItems.filter((i) => i.hasUnreadAlert).length,
+            openItems,
+            doneItems,
           };
         }),
       });
