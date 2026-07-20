@@ -21,8 +21,8 @@ enum APIError: LocalizedError {
 final class APIClient {
     static let shared = APIClient()
 
-    /// Simulator / local development. Replace for device or staging.
-    var baseURL = URL(string: "http://localhost:3000")!
+    /// Heroku staging API. Use `http://localhost:3000` for local backend development.
+    var baseURL = URL(string: "https://cokeep-api-559b29984877.herokuapp.com")!
     var authToken: String?
 
     private let decoder: JSONDecoder = {
