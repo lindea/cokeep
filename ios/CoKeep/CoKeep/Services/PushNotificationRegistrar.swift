@@ -2,17 +2,12 @@ import Foundation
 import UIKit
 import UserNotifications
 
-/// Registers FCM push tokens and routes notification taps.
+/// Registers APNs device tokens and routes notification taps.
 @MainActor
 enum PushNotificationRegistrar {
     static var onOpenInvites: (() -> Void)?
 
     static func requestAuthorization() async {
-        guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
-            print("Push: add GoogleService-Info.plist from Firebase to enable notifications")
-            return
-        }
-
         let center = UNUserNotificationCenter.current()
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])

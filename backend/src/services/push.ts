@@ -1,4 +1,5 @@
 import { NotificationType, Prisma } from "@prisma/client";
+import apn from "@parse/node-apn";
 import admin from "firebase-admin";
 import fs from "fs";
 import { prisma } from "../config/db";
@@ -11,25 +12,43 @@ interface PushPayload {
 }
 
 let messaging: admin.messaging.Messaging | null = null;
+let apnsProvider: apn.Provider | null = null;
 
-/** Initializes Firebase Cloud Messaging when credentials are configured. */
+/** Initializes APNs and/or FCM delivery when credentials are configured. */
 export function initPushService(): void {
-  if (!config.fcm.credentialsPath) {
-    console.log("[push] FCM_CREDENTIALS_PATH not set; push notifications are logged only");
-    return;
-  }
-  if (!fs.existsSync(config.fcm.credentialsPath)) {
-    console.warn(`[push] FCM credentials file not found: ${config.fcm.credentialsPath}`);
-    return;
+  if (config.apns.keyPath && config.apns.keyId && config.apns.teamId) {
+    if (!fs.existsSync(config.apns.keyPath)) {
+      console.warn(`[push] APNs key file not found: ${config.apns.keyPath}`);
+    } else {
+      apnsProvider = new apn.Provider({
+        token: {
+          key: config.apns.keyPath,
+          keyId: config.apns.keyId,
+          teamId: config.apns.teamId,
+        },
+        production: config.nodeEnv === "production",
+      });
+      console.log(`[push] APNs enabled (${config.apns.bundleId})`);
+    }
   }
 
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(config.fcm.credentialsPath),
-    });
+  if (config.fcm.credentialsPath) {
+    if (!fs.existsSync(config.fcm.credentialsPath)) {
+      console.warn(`[push] FCM credentials file not found: ${config.fcm.credentialsPath}`);
+    } else {
+      if (!admin.apps.length) {
+        admin.initializeApp({
+          credential: admin.credential.cert(config.fcm.credentialsPath),
+        });
+      }
+      messaging = admin.messaging();
+      console.log(`[push] FCM enabled (${config.fcm.credentialsPath})`);
+    }
   }
-  messaging = admin.messaging();
-  console.log(`[push] FCM enabled (${config.fcm.credentialsPath})`);
+
+  if (!apnsProvider && !messaging) {
+    console.log("[push] No push credentials configured; notifications are logged only");
+  }
 }
 
 async function countPendingInviteBadge(userId: string): Promise<number> {
@@ -44,7 +63,7 @@ async function countPendingInviteBadge(userId: string): Promise<number> {
   });
 }
 
-function isStaleTokenError(err: unknown): boolean {
+function isStaleFcmTokenError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   const code = "code" in err ? String(err.code) : "";
   if (code === "messaging/registration-token-not-registered") return true;
@@ -53,7 +72,68 @@ function isStaleTokenError(err: unknown): boolean {
   return message.includes("not found") || message.includes("unregistered");
 }
 
-/** Persists in-app notification and attempts FCM delivery. */
+function isApnsDeviceToken(token: string): boolean {
+  return /^[0-9a-f]{64}$/i.test(token);
+}
+
+async function sendApns(
+  deviceToken: string,
+  payload: PushPayload,
+  badge: number,
+  data: Record<string, string>
+): Promise<void> {
+  if (!apnsProvider) return;
+
+  const note = new apn.Notification();
+  note.topic = config.apns.bundleId;
+  note.alert = { title: payload.title, body: payload.body };
+  note.sound = "default";
+  note.badge = badge;
+  note.payload = data;
+
+  const result = await apnsProvider.send(note, deviceToken);
+  if (result.failed.length > 0) {
+    const failure = result.failed[0];
+    const response = failure.response as { reason?: string } | undefined;
+    throw new Error(response?.reason ?? "APNs send failed");
+  }
+}
+
+async function sendFcm(
+  device: { id: string; token: string; platform: string },
+  payload: PushPayload,
+  badge: number,
+  data: Record<string, string>
+): Promise<void> {
+  if (!messaging) return;
+
+  await messaging.send({
+    token: device.token,
+    notification: {
+      title: payload.title,
+      body: payload.body,
+    },
+    data,
+    apns: {
+      headers: {
+        "apns-priority": "10",
+        "apns-push-type": "alert",
+      },
+      payload: {
+        aps: {
+          alert: {
+            title: payload.title,
+            body: payload.body,
+          },
+          sound: "default",
+          badge,
+        },
+      },
+    },
+  });
+}
+
+/** Persists in-app notification and attempts push delivery. */
 export async function notifyUser(
   userId: string,
   type: NotificationType,
@@ -82,7 +162,7 @@ export async function notifyUser(
     ...payload.data,
   };
 
-  if (!messaging) {
+  if (!apnsProvider && !messaging) {
     for (const t of tokens) {
       console.log(
         `[push:dev] token=${t.token.slice(0, 12)}… ${payload.title}: ${payload.body} (badge ${badge})`
@@ -94,34 +174,26 @@ export async function notifyUser(
   for (const device of tokens) {
     const preview = device.token.slice(0, 12);
     try {
-      await messaging.send({
-        token: device.token,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-        },
-        data,
-        apns: {
-          headers: {
-            "apns-priority": "10",
-            "apns-push-type": "alert",
-          },
-          payload: {
-            aps: {
-              alert: {
-                title: payload.title,
-                body: payload.body,
-              },
-              sound: "default",
-              badge,
-            },
-          },
-        },
-      });
-      console.log(`[push] fcm → ${device.platform}/${preview}: ${payload.title} (badge ${badge})`);
+      if (device.platform === "ios" && apnsProvider && isApnsDeviceToken(device.token)) {
+        await sendApns(device.token, payload, badge, data);
+        console.log(`[push] apns → ios/${preview}: ${payload.title} (badge ${badge})`);
+        continue;
+      }
+
+      if (messaging) {
+        await sendFcm(device, payload, badge, data);
+        console.log(`[push] fcm → ${device.platform}/${preview}: ${payload.title} (badge ${badge})`);
+        continue;
+      }
+
+      console.log(
+        `[push:dev] token=${preview}… ${payload.title}: ${payload.body} (badge ${badge})`
+      );
     } catch (err) {
-      console.error(`[push] fcm failed (${device.platform}/${preview}):`, err);
-      if (isStaleTokenError(err)) {
+      console.error(`[push] failed (${device.platform}/${preview}):`, err);
+      const reason =
+        err && typeof err === "object" && "reason" in err ? String(err.reason) : "";
+      if (isStaleFcmTokenError(err) || reason === "BadDeviceToken" || reason === "Unregistered") {
         await prisma.deviceToken.delete({ where: { id: device.id } }).catch(() => undefined);
       }
     }

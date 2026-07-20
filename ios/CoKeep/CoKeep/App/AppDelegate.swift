@@ -1,26 +1,22 @@
-import FirebaseCore
-import FirebaseMessaging
 import UIKit
 import UserNotifications
 
-/// Wires APNs device tokens into Firebase Cloud Messaging (same stack as TogetherApp).
-final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+/// Registers for remote notifications and routes notification taps (native APNs, no Firebase SDK).
+final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        if FirebaseApp.app() == nil, Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
-            FirebaseApp.configure()
-        }
-
         UNUserNotificationCenter.current().delegate = self
-        Messaging.messaging().delegate = self
         application.registerForRemoteNotifications()
         return true
     }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        Messaging.messaging().apnsToken = deviceToken
+        let hex = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        Task {
+            await PushNotificationRegistrar.registerToken(hex)
+        }
     }
 
     func application(
@@ -30,19 +26,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         print("APNs registration failed: \(error.localizedDescription)")
     }
 
-    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        guard let fcmToken else { return }
-        Task {
-            await PushNotificationRegistrar.registerToken(fcmToken)
-        }
-    }
-
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Foreground: badge only, no banner (matches TogetherApp).
         completionHandler([.badge])
     }
 

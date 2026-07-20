@@ -37,4 +37,10 @@ export const config = {
   fcm: {
     credentialsPath: process.env.FCM_CREDENTIALS_PATH || "",
   },
+  apns: {
+    keyId: process.env.APNS_KEY_ID || "",
+    teamId: process.env.APNS_TEAM_ID || "",
+    bundleId: process.env.APNS_BUNDLE_ID ?? "app.cokeep.CoKeep",
+    keyPath: process.env.APNS_KEY_PATH || "",
+  },
 };
