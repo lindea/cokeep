@@ -65,7 +65,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		002B27CE2394401EA95F13A4 /*  */ = {
+		002B27CE2394401EA95F13A4 = {
 			isa = PBXGroup;
 			children = (
 				E79996CFCA9A419DA89F7A66 /* CoKeep.app */,
@@ -84,7 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				D9E8F780F55947DB99A28A36 /* CoKeep */,
-				002B27CE2394401EA95F13A4 /*  */,
+				002B27CE2394401EA95F13A4,
 			);
 			sourceTree = "<group>";
 		};
@@ -244,7 +244,7 @@
 				Base,
 			);
 			mainGroup = 2649902B54A74C2EBFA596A7;
-			productRefGroup = 002B27CE2394401EA95F13A4 /*  */;
+			productRefGroup = 002B27CE2394401EA95F13A4;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -313,9 +313,10 @@
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -357,9 +358,10 @@
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
