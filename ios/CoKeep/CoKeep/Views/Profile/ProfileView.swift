@@ -77,16 +77,16 @@ struct ProfileView: View {
     private func uploadAvatar(_ item: PhotosPickerItem?) async {
         guard let item else { return }
         do {
-            if let data = try await item.loadTransferable(type: Data.self) {
-                let url = try await APIClient.shared.uploadImage(data)
-                try await session.updateProfile(
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: email,
-                    avatarUrl: url
-                )
-                message = L10n.string("profile.saved")
-            }
+            let data = try await item.jpegDataForUpload()
+            let url = try await APIClient.shared.uploadImage(data)
+            try await session.updateProfile(
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                avatarUrl: url
+            )
+            message = L10n.string("profile.saved")
+            error = nil
         } catch {
             self.error = error.localizedDescription
         }

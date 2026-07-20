@@ -130,9 +130,9 @@ struct AddCostView: View {
     private func upload(_ item: PhotosPickerItem?) async {
         guard let item else { return }
         do {
-            if let data = try await item.loadTransferable(type: Data.self) {
-                receiptUrl = try await APIClient.shared.uploadImage(data)
-            }
+            let data = try await item.jpegDataForUpload()
+            receiptUrl = try await APIClient.shared.uploadImage(data)
+            error = nil
         } catch {
             self.error = error.localizedDescription
         }

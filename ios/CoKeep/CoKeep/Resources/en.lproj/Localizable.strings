@@ -41,6 +41,8 @@
 "objects.addPhoto" = "Add photo";
 "objects.changePhoto" = "Change photo";
 "objects.removePhoto" = "Remove photo";
+"objects.photoLoadFailed" = "Could not load that photo. Try another image.";
+"objects.photoUploadFailed" = "Could not upload the photo. Please try again.";
 "template.cabin" = "Cabin";
 "template.cabinDesc" = "Includes maintenance, seasonal, and shopping lists";
 "template.generic" = "Generic";

@@ -280,7 +280,13 @@ struct CreateObjectView: View {
             pickedImageData = nil
             return
         }
-        pickedImageData = try? await item.loadTransferable(type: Data.self)
+        do {
+            pickedImageData = try await item.jpegDataForUpload()
+            error = nil
+        } catch {
+            pickedImageData = nil
+            self.error = error.localizedDescription
+        }
     }
 
     private func save() async {

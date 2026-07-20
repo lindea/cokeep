@@ -9,6 +9,7 @@ struct ObjectDetailView: View {
     @State private var showInvite = false
     @State private var photoItem: PhotosPickerItem?
     @State private var uploadingImage = false
+    @State private var imageError: String?
 
     init(objectId: String, deepLinkTodoItemId: Binding<String?> = .constant(nil)) {
         self.objectId = objectId
@@ -22,6 +23,13 @@ struct ObjectDetailView: View {
             if let object {
                 VStack(spacing: 0) {
                     header(object)
+                    if let imageError {
+                        Text(imageError)
+                            .font(.caption)
+                            .foregroundStyle(Theme.danger)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
+                    }
 
                     Picker("", selection: $selectedTab) {
                         Text(L10n.string("object.todos")).tag(0)
@@ -100,49 +108,55 @@ struct ObjectDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay {
                 if uploadingImage {
-                    ProgressView()
+                    ZStack {
+                        Color.black.opacity(0.35)
+                        ProgressView().tint(.white)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
 
         if object.role == "OWNER" {
-            imageView
-                .overlay(alignment: .bottomTrailing) {
-                    Image(systemName: "camera.fill")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(5)
-                        .background(Circle().fill(Theme.accent))
-                        .offset(x: 4, y: 4)
-                }
-                .overlay {
-                    PhotosPicker(selection: $photoItem, matching: .images) {
-                        Color.clear
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                imageView
+                    .overlay(alignment: .bottomTrailing) {
+                        Image(systemName: "camera.fill")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(5)
+                            .background(Circle().fill(Theme.accent))
+                            .offset(x: 4, y: 4)
+                    }
+            }
+            .disabled(uploadingImage)
+            .contextMenu {
+                if object.imageUrl != nil {
+                    Button(L10n.string("objects.removePhoto"), role: .destructive) {
+                        Task { await setImageUrl(nil) }
                     }
                 }
-                .contextMenu {
-                    if object.imageUrl != nil {
-                        Button(L10n.string("objects.removePhoto"), role: .destructive) {
-                            Task { await setImageUrl(nil) }
-                        }
-                    }
-                }
+            }
         } else {
             imageView
         }
     }
 
     private func updateImage(_ item: PhotosPickerItem?) async {
-        guard let item, let data = try? await item.loadTransferable(type: Data.self) else { return }
+        guard let item else { return }
+        imageError = nil
         uploadingImage = true
         defer {
             uploadingImage = false
             photoItem = nil
         }
         do {
+            let data = try await item.jpegDataForUpload()
             let url = try await APIClient.shared.uploadImage(data)
             await setImageUrl(url)
         } catch {
-            // keep previous image
+            imageError = error.localizedDescription.isEmpty
+                ? L10n.string("objects.photoUploadFailed")
+                : error.localizedDescription
         }
     }
 

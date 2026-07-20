@@ -41,6 +41,8 @@
 "objects.addPhoto" = "Legg til bilde";
 "objects.changePhoto" = "Bytt bilde";
 "objects.removePhoto" = "Fjern bilde";
+"objects.photoLoadFailed" = "Kunne ikke laste bildet. Prøv et annet bilde.";
+"objects.photoUploadFailed" = "Kunne ikke laste opp bildet. Prøv igjen.";
 "template.cabin" = "Hytte";
 "template.cabinDesc" = "Inkluderer vedlikehold, sesong og handlelister";
 "template.generic" = "Generisk";
