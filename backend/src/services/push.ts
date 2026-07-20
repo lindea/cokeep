@@ -14,22 +14,38 @@ interface PushPayload {
 let messaging: admin.messaging.Messaging | null = null;
 let apnsProvider: apn.Provider | null = null;
 
-/** Initializes APNs and/or FCM delivery when credentials are configured. */
-export function initPushService(): void {
-  if (config.apns.keyPath && config.apns.keyId && config.apns.teamId) {
+/** Resolves APNs .p8 material from APNS_KEY (inline) or APNS_KEY_PATH (file). */
+function resolveApnsKeyMaterial(): string | null {
+  const inline = config.apns.key.trim();
+  if (inline) {
+    return inline.replace(/\\n/g, "\n");
+  }
+
+  if (config.apns.keyPath) {
     if (!fs.existsSync(config.apns.keyPath)) {
       console.warn(`[push] APNs key file not found: ${config.apns.keyPath}`);
-    } else {
-      apnsProvider = new apn.Provider({
-        token: {
-          key: config.apns.keyPath,
-          keyId: config.apns.keyId,
-          teamId: config.apns.teamId,
-        },
-        production: config.nodeEnv === "production",
-      });
-      console.log(`[push] APNs enabled (${config.apns.bundleId})`);
+      return null;
     }
+    return fs.readFileSync(config.apns.keyPath, "utf8");
+  }
+
+  return null;
+}
+
+/** Initializes APNs and/or FCM delivery when credentials are configured. */
+export function initPushService(): void {
+  const apnsKey = resolveApnsKeyMaterial();
+  if (apnsKey && config.apns.keyId && config.apns.teamId) {
+    apnsProvider = new apn.Provider({
+      token: {
+        key: apnsKey,
+        keyId: config.apns.keyId,
+        teamId: config.apns.teamId,
+      },
+      production: config.nodeEnv === "production",
+    });
+    const source = config.apns.key.trim() ? "APNS_KEY env" : config.apns.keyPath;
+    console.log(`[push] APNs enabled (${config.apns.bundleId}, key from ${source})`);
   }
 
   if (config.fcm.credentialsPath) {

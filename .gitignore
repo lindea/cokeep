@@ -29,3 +29,7 @@ ios/**/*.xcworkspace/xcuserdata/
 coverage/
 .turbo/
 *.tsbuildinfo
+
+backend/secrets/
+backend/secrets/*
+backend/secrets/**

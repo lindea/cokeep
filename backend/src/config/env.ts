@@ -41,6 +41,8 @@ export const config = {
     keyId: process.env.APNS_KEY_ID || "",
     teamId: process.env.APNS_TEAM_ID || "",
     bundleId: process.env.APNS_BUNDLE_ID ?? "app.cokeep.CoKeep",
+    /** Raw .p8 key contents (for Heroku). Supports literal newlines or `\\n` escapes. */
+    key: process.env.APNS_KEY || "",
     keyPath: process.env.APNS_KEY_PATH || "",
   },
 };
