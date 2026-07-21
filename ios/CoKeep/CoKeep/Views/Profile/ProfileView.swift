@@ -50,14 +50,23 @@ struct ProfileView: View {
                     }
 
                     Section {
-                        Button(L10n.string("profile.save")) {
+                        Button {
                             Task { await save() }
+                        } label: {
+                            HStack {
+                                Text(L10n.string("profile.save"))
+                                if saving {
+                                    Spacer()
+                                    ProgressView().controlSize(.small)
+                                }
+                            }
                         }
                         .disabled(saving)
 
                         Button(L10n.string("profile.signOut"), role: .destructive) {
                             session.logout()
                         }
+                        .disabled(saving)
                     }
                 }
                 .scrollContentBackground(.hidden)
@@ -97,6 +106,7 @@ struct ProfileView: View {
     }
 
     private func save() async {
+        guard !saving else { return }
         saving = true
         defer { saving = false }
         do {

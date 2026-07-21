@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import ContactsUI
 
 struct ObjectDetailView: View {
     let objectId: String
@@ -199,7 +200,10 @@ struct MembersView: View {
     let object: SharedObject
     var onChange: () -> Void
     @EnvironmentObject private var session: SessionStore
+    @Environment(\.dismiss) private var dismiss
     @State private var error: String?
+    @State private var confirmDeleteObject = false
+    @State private var busy = false
 
     var body: some View {
         List {
@@ -219,6 +223,7 @@ struct MembersView: View {
                                 Task { await remove(member.user.id) }
                             }
                             .font(.caption)
+                            .disabled(busy)
                         }
                     }
                 }
@@ -228,12 +233,37 @@ struct MembersView: View {
                 Button(L10n.string("members.leave"), role: .destructive) {
                     Task { await leave() }
                 }
+                .disabled(busy)
+
+                if object.role == "OWNER" {
+                    Button(L10n.string("objects.delete"), role: .destructive) {
+                        confirmDeleteObject = true
+                    }
+                    .disabled(busy)
+                }
+            }
+
+            if let error {
+                Text(error).foregroundStyle(Theme.danger)
             }
         }
         .scrollContentBackground(.hidden)
+        .confirmationDialog(
+            L10n.string("objects.deleteConfirm"),
+            isPresented: $confirmDeleteObject,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.string("common.delete"), role: .destructive) {
+                Task { await deleteObject() }
+            }
+            Button(L10n.string("common.cancel"), role: .cancel) {}
+        }
     }
 
     private func remove(_ userId: String) async {
+        guard !busy else { return }
+        busy = true
+        defer { busy = false }
         struct Ok: Codable { let ok: Bool? }
         do {
             let _: Ok = try await APIClient.shared.request(
@@ -247,21 +277,37 @@ struct MembersView: View {
     }
 
     private func leave() async {
+        guard !busy else { return }
+        busy = true
+        defer { busy = false }
         struct Ok: Codable { let ok: Bool? }
         do {
             let _: Ok = try await APIClient.shared.request(
                 "POST",
                 path: "api/objects/\(object.id)/leave"
             )
-            onChange()
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func deleteObject() async {
+        guard !busy else { return }
+        busy = true
+        defer { busy = false }
+        struct Ok: Codable { let ok: Bool? }
+        do {
+            let _: Ok = try await APIClient.shared.request(
+                "DELETE",
+                path: "api/objects/\(object.id)"
+            )
+            dismiss()
         } catch {
             self.error = error.localizedDescription
         }
     }
 }
-
-import SwiftUI
-import ContactsUI
 
 struct InviteUserView: View {
     let objectId: String
@@ -273,6 +319,7 @@ struct InviteUserView: View {
     @State private var error: String?
     @State private var loading = false
     @State private var showContacts = false
+    @State private var pendingContactPhone: String?
     @State private var objectName = ""
 
     var body: some View {
@@ -294,6 +341,7 @@ struct InviteUserView: View {
                         } label: {
                             Label(L10n.string("invite.fromContacts"), systemImage: "person.crop.circle.badge.plus")
                         }
+                        .disabled(loading)
                     }
 
                     if let message {
@@ -304,27 +352,51 @@ struct InviteUserView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
+                .disabled(loading)
             }
             .navigationTitle(L10n.string("invite.title"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(loading)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.string("invite.send")) {
+                    BusyToolbarButton(
+                        title: L10n.string("invite.send"),
+                        enabled: !phone.trimmingCharacters(in: .whitespaces).isEmpty,
+                        loading: loading
+                    ) {
                         Task { await send() }
                     }
-                    .disabled(phone.isEmpty || loading)
                 }
             }
-            .sheet(isPresented: $showContacts) {
-                ContactPhonePicker { selected in
-                    phone = selected
-                    showContacts = false
+            // fullScreenCover avoids the nested-sheet bug where selecting a contact
+            // dismisses the invite sheet without applying the phone number.
+            .fullScreenCover(isPresented: $showContacts, onDismiss: {
+                if let pending = pendingContactPhone {
+                    applyContactPhone(pending)
+                    pendingContactPhone = nil
+                }
+            }) {
+                ContactPhonePicker(isPresented: $showContacts) { selected in
+                    pendingContactPhone = selected
                 }
             }
             .task { await loadObjectName() }
         }
+    }
+
+    private func applyContactPhone(_ raw: String) {
+        let digits = raw.filter { $0.isNumber || $0 == "+" }
+        if digits.hasPrefix("+") {
+            let sorted = CountryCode.common.sorted { $0.code.count > $1.code.count }
+            for code in sorted where digits.hasPrefix(code.code) {
+                country = code
+                phone = String(digits.dropFirst(code.code.count))
+                return
+            }
+        }
+        phone = digits.filter { $0.isNumber }
     }
 
     private func loadObjectName() async {
@@ -336,8 +408,11 @@ struct InviteUserView: View {
     }
 
     private func send() async {
+        guard !loading else { return }
         loading = true
         defer { loading = false }
+        message = nil
+        error = nil
         do {
             struct Body: Encodable {
                 let phone: String
@@ -374,9 +449,10 @@ struct InviteUserView: View {
 
     private func openSms(phone: String, body: String) {
         let digits = phone.filter { $0.isNumber || $0 == "+" }
+        let full = digits.hasPrefix("+") ? digits : "\(country.code)\(digits)"
         var components = URLComponents()
         components.scheme = "sms"
-        components.path = digits
+        components.path = full
         components.queryItems = [URLQueryItem(name: "body", value: body)]
         guard let url = components.url else { return }
         UIApplication.shared.open(url)
@@ -384,31 +460,63 @@ struct InviteUserView: View {
 }
 
 /// Native contact picker that returns a phone number string.
+/// Presented via fullScreenCover (not a nested sheet) so the invite form stays mounted.
+/// The picker is presented from a host VC — CNContactPicker does not work well as the
+/// root of a SwiftUI fullScreenCover by itself.
 struct ContactPhonePicker: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
     var onSelect: (String) -> Void
 
-    func makeUIViewController(context: Context) -> CNContactPickerViewController {
-        let picker = CNContactPickerViewController()
-        picker.delegate = context.coordinator
-        picker.predicateForEnablingContact = NSPredicate(format: "phoneNumbers.@count > 0")
-        return picker
+    func makeUIViewController(context: Context) -> UIViewController {
+        let host = UIViewController()
+        host.view.backgroundColor = .systemBackground
+        return host
     }
 
-    func updateUIViewController(_ uiViewController: CNContactPickerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        context.coordinator.parent = self
+        guard isPresented, !context.coordinator.isShowingPicker else { return }
+
+        // Defer until the host is in a window; fullScreenCover can call update before that.
+        DispatchQueue.main.async {
+            guard context.coordinator.parent.isPresented,
+                  !context.coordinator.isShowingPicker,
+                  uiViewController.view.window != nil
+            else { return }
+
+            context.coordinator.isShowingPicker = true
+            let picker = CNContactPickerViewController()
+            picker.delegate = context.coordinator
+            picker.displayedPropertyKeys = [CNContactPhoneNumbersKey]
+            picker.predicateForEnablingContact = NSPredicate(format: "phoneNumbers.@count > 0")
+            uiViewController.present(picker, animated: true)
+        }
+    }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onSelect: onSelect)
+        Coordinator(parent: self)
     }
 
     final class Coordinator: NSObject, CNContactPickerDelegate {
-        let onSelect: (String) -> Void
-        init(onSelect: @escaping (String) -> Void) { self.onSelect = onSelect }
+        var parent: ContactPhonePicker
+        var isShowingPicker = false
+        init(parent: ContactPhonePicker) { self.parent = parent }
 
         func contactPicker(_ picker: CNContactPickerViewController, didSelect contact: CNContact) {
             if let number = contact.phoneNumbers.first?.value.stringValue {
                 let digits = number.filter { $0.isNumber || $0 == "+" }
-                onSelect(digits)
+                parent.onSelect(digits)
             }
+            close()
+        }
+
+        func contactPickerDidCancel(_ picker: CNContactPickerViewController) {
+            close()
+        }
+
+        private func close() {
+            isShowingPicker = false
+            parent.isPresented = false
         }
     }
 }

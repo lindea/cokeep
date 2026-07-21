@@ -44,3 +44,23 @@ struct PrimaryButtonStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
+
+/// Toolbar confirm button that shows a spinner and blocks repeat taps while busy.
+struct BusyToolbarButton: View {
+    let title: String
+    var enabled: Bool = true
+    let loading: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            if loading {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Text(title)
+            }
+        }
+        .disabled(!enabled || loading)
+    }
+}

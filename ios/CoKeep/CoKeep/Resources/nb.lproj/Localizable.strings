@@ -9,6 +9,9 @@
 "common.back" = "Tilbake";
 "common.cancel" = "Avbryt";
 "common.save" = "Lagre";
+"common.delete" = "Slett";
+"common.deleting" = "Sletter…";
+"common.saving" = "Lagrer…";
 "login.title" = "Velkommen tilbake";
 "login.forgot" = "Glemt passord?";
 "login.submit" = "Logg inn";
@@ -41,6 +44,15 @@
 "objects.create" = "Opprett objekt";
 "objects.name" = "Navn";
 "objects.template" = "Mal";
+"objects.delete" = "Slett objekt";
+"objects.deleteConfirm" = "Slette dette objektet med alle lister, oppgaver og kostnader? Dette kan ikke angres.";
+"objects.deleted" = "Objektet er slettet";
+"todos.deleteItem" = "Slett oppgave";
+"todos.deleteItemConfirm" = "Slette denne oppgaven?";
+"todos.deleteList" = "Slett liste";
+"todos.deleteListConfirm" = "Slette denne listen og alle oppgavene?";
+"costs.delete" = "Slett kostnad";
+"costs.deleteConfirm" = "Slette denne kostnadsposten?";
 "objects.addPhoto" = "Legg til bilde";
 "objects.changePhoto" = "Bytt bilde";
 "objects.removePhoto" = "Fjern bilde";

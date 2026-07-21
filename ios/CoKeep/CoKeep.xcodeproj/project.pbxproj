@@ -20,12 +20,12 @@
 		96087DFB2AFD431886F4C42C /* CoKeepApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FB372E6D6D45DBB341DE51 /* CoKeepApp.swift */; };
 		9DD95106E93741BFB89A0A89 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* PushNotificationRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */; };
+		A1B2C3D4E5F60718293A4B63 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */; };
+		A1B2C3D4E5F60718293A4B64 /* CachedRemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */; };
 		A313FA10DA6F42CC80D2D5FB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839F300E9B184C1395CE10AA /* Theme.swift */; };
 		B1A2C3D4E5F60718293A4B5C /* BadgeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3C4D5E60718293A4B5C /* BadgeStore.swift */; };
 		C21A2930503A4CB88B86B291 /* ObjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7F3366E4374906A043077E /* ObjectDetailView.swift */; };
 		D2E3F4A5B6C70819293A4B5C /* PhotoPickerLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F3A4B5C6D70819293A4B5C /* PhotoPickerLoader.swift */; };
-		A1B2C3D4E5F60718293A4B63 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */; };
-		A1B2C3D4E5F60718293A4B64 /* CachedRemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */; };
 		D40D59B37005483D8FCBEBC9 /* TodoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02824302E7AD43A792AAD411 /* TodoViews.swift */; };
 		E03463ABFB214CBD81427B3A /* ObjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652C0E32263840988193DD29 /* ObjectsListView.swift */; };
 		F1A2B3C4D5E60718293A4B5D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */; };
@@ -48,6 +48,8 @@
 		89A2013CF4FB4A41B0A50AC4 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		9499ACF22A9E41FF83822F6C /* AuthViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViews.swift; sourceTree = "<group>"; };
 		9E27D8E56C394C2FAAD3840A /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedRemoteImage.swift; sourceTree = "<group>"; };
 		AAF64FA7C6184DD0A1B5A271 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B2C3D4E5F60718293A4B5C6D /* PushNotificationRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationRegistrar.swift; sourceTree = "<group>"; };
 		B5F111F76F8346CD889084AF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -57,8 +59,6 @@
 		DE7F3366E4374906A043077E /* ObjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetailView.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E60718293A4B5D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E2F3A4B5C6D70819293A4B5C /* PhotoPickerLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPickerLoader.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60718293A4B61 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60718293A4B62 /* CachedRemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedRemoteImage.swift; sourceTree = "<group>"; };
 		E79996CFCA9A419DA89F7A66 /* CoKeep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CoKeep.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA2B9D49CCC54F4A9D0B647D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		F3A4B5C6D7E8091A2B3C4D5F /* LaunchConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchConfigStore.swift; sourceTree = "<group>"; };
@@ -344,7 +344,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;
@@ -389,7 +389,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CoKeep/CoKeep.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = R7YM2GA8VH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CoKeep/Info.plist;

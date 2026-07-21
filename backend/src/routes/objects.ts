@@ -159,6 +159,17 @@ router.patch("/:objectId", async (req: AuthenticatedRequest, res, next) => {
   }
 });
 
+/** Owner permanently deletes an object and all related data. */
+router.delete("/:objectId", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    await requireObjectOwner(req.params.objectId, req.user!.userId);
+    await prisma.sharedObject.delete({ where: { id: req.params.objectId } });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /** Current user leaves the object. */
 router.post("/:objectId/leave", async (req: AuthenticatedRequest, res, next) => {
   try {

@@ -6,6 +6,7 @@ struct TodoListsView: View {
     @State private var lists: [TodoList] = []
     @State private var showNewList = false
     @State private var newListName = ""
+    @State private var creatingList = false
     @State private var pushedItem: Identified?
 
     init(objectId: String, deepLinkTodoItemId: Binding<String?> = .constant(nil)) {
@@ -60,6 +61,7 @@ struct TodoListsView: View {
             Button(L10n.string("common.save")) {
                 Task { await createList() }
             }
+            .disabled(creatingList || newListName.trimmingCharacters(in: .whitespaces).isEmpty)
         }
     }
 
@@ -79,13 +81,18 @@ struct TodoListsView: View {
     }
 
     private func createList() async {
+        guard !creatingList else { return }
+        let name = newListName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        creatingList = true
+        defer { creatingList = false }
         struct Body: Encodable { let name: String }
         struct Resp: Codable { let list: TodoListSummary }
         do {
             let _: Resp = try await APIClient.shared.request(
                 "POST",
                 path: "api/objects/\(objectId)/todo-lists",
-                body: Body(name: newListName)
+                body: Body(name: name)
             )
             newListName = ""
             await load()
@@ -98,6 +105,8 @@ struct TodoListSection: View {
     let objectId: String
     var onChange: () -> Void
     @State private var showAdd = false
+    @State private var confirmDeleteList = false
+    @State private var deletingList = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -114,6 +123,11 @@ struct TodoListSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .foregroundStyle(Theme.accent)
+                }
+            }
+            .contextMenu {
+                Button(L10n.string("todos.deleteList"), role: .destructive) {
+                    confirmDeleteList = true
                 }
             }
 
@@ -164,6 +178,28 @@ struct TodoListSection: View {
                 onChange()
             }
         }
+        .confirmationDialog(
+            L10n.string("todos.deleteListConfirm"),
+            isPresented: $confirmDeleteList,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.string("common.delete"), role: .destructive) {
+                Task { await deleteList() }
+            }
+            Button(L10n.string("common.cancel"), role: .cancel) {}
+        }
+        .opacity(deletingList ? 0.5 : 1)
+    }
+
+    private func deleteList() async {
+        guard !deletingList else { return }
+        deletingList = true
+        defer { deletingList = false }
+        struct Ok: Codable { let ok: Bool? }
+        do {
+            let _: Ok = try await APIClient.shared.request("DELETE", path: "api/todo-lists/\(list.id)")
+            onChange()
+        } catch {}
     }
 
     private func toggleDone(_ item: TodoItem, done: Bool) async {
@@ -240,6 +276,7 @@ struct CreateTodoItemView: View {
     @State private var members: [ObjectMember] = []
     @State private var assigneeId: String?
     @State private var error: String?
+    @State private var loading = false
 
     var body: some View {
         NavigationStack {
@@ -280,15 +317,20 @@ struct CreateTodoItemView: View {
                 }
             }
             .navigationTitle(L10n.string("todos.newItem"))
+            .disabled(loading)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(loading)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.string("common.save")) {
+                    BusyToolbarButton(
+                        title: L10n.string("common.save"),
+                        enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty,
+                        loading: loading
+                    ) {
                         Task { await save() }
                     }
-                    .disabled(name.isEmpty)
                 }
             }
             .task { await loadMembers() }
@@ -304,6 +346,9 @@ struct CreateTodoItemView: View {
     }
 
     private func save() async {
+        guard !loading else { return }
+        loading = true
+        defer { loading = false }
         struct Body: Encodable {
             let name: String
             let description: String?
@@ -339,10 +384,13 @@ struct CreateTodoItemView: View {
 struct TodoItemDetailView: View {
     let itemId: String
     var onChange: () -> Void
+    @Environment(\.dismiss) private var dismiss
 
     @State private var item: TodoItem?
     @State private var showLog = false
     @State private var members: [ObjectMember] = []
+    @State private var confirmDelete = false
+    @State private var deleting = false
 
     var body: some View {
         ZStack {
@@ -364,6 +412,7 @@ struct TodoItemDetailView: View {
                             Label(L10n.string("todos.logWork"), systemImage: "clock.badge.plus")
                         }
                         .buttonStyle(PrimaryButtonStyle())
+                        .disabled(deleting)
 
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
@@ -395,6 +444,12 @@ struct TodoItemDetailView: View {
                                     .font(.subheadline)
                             }
                         }
+
+                        Button(L10n.string("todos.deleteItem"), role: .destructive) {
+                            confirmDelete = true
+                        }
+                        .disabled(deleting)
+                        .padding(.top, 8)
                     }
                     .padding(20)
                 }
@@ -419,6 +474,28 @@ struct TodoItemDetailView: View {
                 }
             }
         }
+        .confirmationDialog(
+            L10n.string("todos.deleteItemConfirm"),
+            isPresented: $confirmDelete,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.string("common.delete"), role: .destructive) {
+                Task { await deleteItem() }
+            }
+            Button(L10n.string("common.cancel"), role: .cancel) {}
+        }
+    }
+
+    private func deleteItem() async {
+        guard !deleting else { return }
+        deleting = true
+        defer { deleting = false }
+        struct Ok: Codable { let ok: Bool? }
+        do {
+            let _: Ok = try await APIClient.shared.request("DELETE", path: "api/todo-items/\(itemId)")
+            onChange()
+            dismiss()
+        } catch {}
     }
 
     @ViewBuilder
@@ -487,6 +564,7 @@ struct LogWorkView: View {
     @State private var endedAt = Date()
     @State private var note = ""
     @State private var error: String?
+    @State private var loading = false
 
     var body: some View {
         NavigationStack {
@@ -499,12 +577,17 @@ struct LogWorkView: View {
                 }
             }
             .navigationTitle(L10n.string("todos.logWork"))
+            .disabled(loading)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(loading)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.string("common.save")) {
+                    BusyToolbarButton(
+                        title: L10n.string("common.save"),
+                        loading: loading
+                    ) {
                         Task { await save() }
                     }
                 }
@@ -513,6 +596,9 @@ struct LogWorkView: View {
     }
 
     private func save() async {
+        guard !loading else { return }
+        loading = true
+        defer { loading = false }
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime]
         struct Body: Encodable {

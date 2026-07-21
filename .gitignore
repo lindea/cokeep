@@ -31,3 +31,6 @@ coverage/
 backend/secrets/
 backend/secrets/*
 backend/secrets/**
+
+backups/
+backups/**

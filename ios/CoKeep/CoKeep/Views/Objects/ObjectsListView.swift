@@ -47,6 +47,7 @@ struct ObjectsListView: View {
                         set: { deepLinkTodoItemId = $0 }
                     )
                 )
+                .onDisappear { Task { await load() } }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -231,18 +232,23 @@ struct CreateObjectView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
+                .disabled(loading)
             }
             .navigationTitle(L10n.string("objects.create"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(loading)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.string("common.save")) {
+                    BusyToolbarButton(
+                        title: L10n.string("common.save"),
+                        enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty,
+                        loading: loading
+                    ) {
                         Task { await save() }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || loading)
                 }
             }
             .onChange(of: photoItem) { _, item in
@@ -281,6 +287,7 @@ struct CreateObjectView: View {
     }
 
     private func save() async {
+        guard !loading else { return }
         loading = true
         defer { loading = false }
         do {

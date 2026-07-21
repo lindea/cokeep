@@ -3,8 +3,10 @@ import PhotosUI
 
 struct CostsView: View {
     let objectId: String
+    @EnvironmentObject private var session: SessionStore
     @State private var costs: [CostEntry] = []
     @State private var showAdd = false
+    @State private var deletingId: String?
 
     var body: some View {
         ScrollView {
@@ -46,6 +48,15 @@ struct CostsView: View {
                     }
                     .padding(14)
                     .background(RoundedRectangle(cornerRadius: 16).fill(Theme.cardFill))
+                    .contextMenu {
+                        if cost.user.id == session.user?.id {
+                            Button(L10n.string("costs.delete"), role: .destructive) {
+                                Task { await deleteCost(cost.id) }
+                            }
+                            .disabled(deletingId == cost.id)
+                        }
+                    }
+                    .opacity(deletingId == cost.id ? 0.5 : 1)
                 }
             }
             .padding(16)
@@ -68,6 +79,17 @@ struct CostsView: View {
                 path: "api/objects/\(objectId)/costs"
             )
             costs = resp.costs
+        } catch {}
+    }
+
+    private func deleteCost(_ id: String) async {
+        guard deletingId == nil else { return }
+        deletingId = id
+        defer { deletingId = nil }
+        struct Ok: Codable { let ok: Bool? }
+        do {
+            let _: Ok = try await APIClient.shared.request("DELETE", path: "api/costs/\(id)")
+            costs.removeAll { $0.id == id }
         } catch {}
     }
 }
@@ -113,15 +135,19 @@ struct AddCostView: View {
                 }
             }
             .navigationTitle(L10n.string("costs.add"))
+            .disabled(loading)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(loading)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.string("common.save")) {
+                    BusyToolbarButton(
+                        title: L10n.string("common.save"),
+                        loading: loading
+                    ) {
                         Task { await save() }
                     }
-                    .disabled(loading)
                 }
             }
         }
@@ -139,6 +165,7 @@ struct AddCostView: View {
     }
 
     private func save() async {
+        guard !loading else { return }
         guard let value = Double(amount.replacingOccurrences(of: ",", with: ".")), value > 0 else {
             error = L10n.string("costs.invalidAmount")
             return
