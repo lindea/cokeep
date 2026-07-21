@@ -321,6 +321,9 @@ struct InviteUserView: View {
     @State private var showContacts = false
     @State private var pendingContactPhone: String?
     @State private var objectName = ""
+    /// Non-user invite: share TestFlight instead of auto-opening App Store SMS.
+    @State private var pendingShareText: String?
+    @State private var pendingShareLink: String?
 
     var body: some View {
         NavigationStack {
@@ -342,6 +345,22 @@ struct InviteUserView: View {
                             Label(L10n.string("invite.fromContacts"), systemImage: "person.crop.circle.badge.plus")
                         }
                         .disabled(loading)
+                    }
+
+                    if let pendingShareText, let pendingShareLink {
+                        Section {
+                            Text(L10n.string("invite.notOnCokeep"))
+                                .foregroundStyle(Theme.ink)
+                            ShareLink(item: pendingShareText) {
+                                Label(L10n.string("invite.shareTestFlight"), systemImage: "square.and.arrow.up")
+                            }
+                            Button {
+                                UIPasteboard.general.string = pendingShareLink
+                                message = L10n.string("invite.linkCopied")
+                            } label: {
+                                Label(L10n.string("invite.copyLink"), systemImage: "doc.on.doc")
+                            }
+                        }
                     }
 
                     if let message {
@@ -413,6 +432,8 @@ struct InviteUserView: View {
         defer { loading = false }
         message = nil
         error = nil
+        pendingShareText = nil
+        pendingShareLink = nil
         do {
             struct Body: Encodable {
                 let phone: String
@@ -422,6 +443,8 @@ struct InviteUserView: View {
                 struct InviteResult: Codable {
                     let recipientExists: Bool
                     let inviteUrl: String?
+                    let downloadUrl: String?
+                    let openMessages: Bool?
                 }
                 let invite: InviteResult
             }
@@ -432,19 +455,58 @@ struct InviteUserView: View {
             )
             if resp.invite.recipientExists {
                 message = L10n.string("invite.sentPush")
-            } else if let inviteUrl = resp.invite.inviteUrl {
-                let inviterName = session.user?.firstName ?? L10n.string("invite.someone")
-                let body = L10n.inviteSmsBody(
+                return
+            }
+
+            let inviterName = session.user?.firstName ?? L10n.string("invite.someone")
+            let objectLabel = objectName.isEmpty ? L10n.string("invite.objectFallback") : objectName
+            let link = Self.resolveInstallLink(
+                downloadUrl: resp.invite.downloadUrl,
+                inviteUrl: resp.invite.inviteUrl,
+                openMessages: resp.invite.openMessages
+            )
+            let shareBody = L10n.inviteShareBody(
+                inviterName: inviterName,
+                objectName: objectLabel,
+                link: link
+            )
+
+            // Beta default: share TestFlight in-app. After App Store launch, backend can
+            // set openMessages=true to restore auto-SMS with the store link.
+            if resp.invite.openMessages == true {
+                let smsBody = L10n.inviteSmsBody(
                     inviterName: inviterName,
-                    objectName: objectName.isEmpty ? L10n.string("invite.objectFallback") : objectName,
-                    link: inviteUrl
+                    objectName: objectLabel,
+                    link: link
                 )
-                openSms(phone: phone, body: body)
+                openSms(phone: phone, body: smsBody)
                 message = L10n.string("invite.sentSms")
+            } else {
+                pendingShareLink = link
+                pendingShareText = shareBody
             }
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    /// Public TestFlight join link used while the app is not on the App Store.
+    private static let testFlightURL = "https://testflight.apple.com/join/gnRXHXyC"
+
+    private static func resolveInstallLink(
+        downloadUrl: String?,
+        inviteUrl: String?,
+        openMessages: Bool?
+    ) -> String {
+        let candidates = [downloadUrl, inviteUrl].compactMap { $0 }
+        if openMessages == true {
+            return candidates.first ?? testFlightURL
+        }
+        // Share-only (beta): never hand out an App Store URL.
+        if let url = candidates.first(where: { !$0.contains("apps.apple.com") }) {
+            return url
+        }
+        return testFlightURL
     }
 
     private func openSms(phone: String, body: String) {

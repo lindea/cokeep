@@ -62,7 +62,8 @@ router.post("/objects/:objectId/invites", async (req: AuthenticatedRequest, res,
       },
     });
 
-    const inviteUrl = `${config.appStoreUrl}?invite=${invite.token}`;
+    // Phone-matched pending invites work after install+register; download URL is for install only.
+    const downloadUrl = existingUser ? null : config.appDownloadUrl;
 
     if (existingUser) {
       const copy = invitePushCopy(
@@ -87,7 +88,11 @@ router.post("/objects/:objectId/invites", async (req: AuthenticatedRequest, res,
         phoneE164: invite.phoneE164,
         status: invite.status,
         recipientExists: Boolean(existingUser),
-        inviteUrl: existingUser ? null : inviteUrl,
+        /** @deprecated Prefer downloadUrl — kept for older clients. */
+        inviteUrl: downloadUrl,
+        downloadUrl,
+        /** When false, client should share the link in-app (TestFlight beta), not auto-open SMS. */
+        openMessages: existingUser ? false : config.inviteNonUserOpenMessages,
         createdAt: invite.createdAt,
       },
     });

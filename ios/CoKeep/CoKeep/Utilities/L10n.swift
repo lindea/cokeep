@@ -59,4 +59,8 @@ enum L10n {
     static func inviteSmsBody(inviterName: String, objectName: String, link: String) -> String {
         String(format: string("invite.smsBody"), inviterName, objectName, link)
     }
+
+    static func inviteShareBody(inviterName: String, objectName: String, link: String) -> String {
+        String(format: string("invite.shareBody"), inviterName, objectName, link)
+    }
 }

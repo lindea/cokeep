@@ -78,6 +78,11 @@
 "invite.sentPush" = "Invitasjon sendt som push-varsel.";
 "invite.sentSms" = "Meldinger åpnet med invitasjonen din.";
 "invite.smsBody" = "%@ har invitert deg til å samarbeide om «%@» i CoKeep. Installer appen: %@";
+"invite.notOnCokeep" = "Denne personen bruker ikke CoKeep ennå. Invitasjonen er lagret — når de registrerer seg med dette telefonnummeret, kan de godta den.";
+"invite.shareTestFlight" = "Del TestFlight-invitasjon";
+"invite.copyLink" = "Kopier TestFlight-lenke";
+"invite.linkCopied" = "Lenke kopiert.";
+"invite.shareBody" = "%@ har invitert deg til å samarbeide om «%@» i CoKeep. Installer beta via TestFlight: %@ — registrer deg deretter med dette telefonnummeret for å godta invitasjonen.";
 "invite.someone" = "Noen";
 "invite.objectFallback" = "et delt objekt";
 "invites.empty" = "Ingen ventende invitasjoner";

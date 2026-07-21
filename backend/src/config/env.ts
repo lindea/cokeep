@@ -19,7 +19,21 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "30d",
   appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3000",
   deepLinkScheme: process.env.APP_DEEP_LINK_SCHEME ?? "cokeep",
+  /** App Store page once published. */
   appStoreUrl: process.env.APP_STORE_URL ?? "https://apps.apple.com/app/cokeep",
+  /**
+   * Install link used in invites for people who are not yet CoKeep users.
+   * During beta this should be the public TestFlight URL.
+   */
+  appDownloadUrl:
+    process.env.APP_DOWNLOAD_URL ??
+    process.env.APP_STORE_URL ??
+    "https://testflight.apple.com/join/gnRXHXyC",
+  /**
+   * When false (default), iOS shows an in-app share prompt instead of auto-opening SMS
+   * with an App Store link. Set INVITE_NON_USER_OPEN_MESSAGES=true after App Store launch.
+   */
+  inviteNonUserOpenMessages: process.env.INVITE_NON_USER_OPEN_MESSAGES === "true",
   uploadDir: path.resolve(process.env.UPLOAD_DIR ?? "./uploads"),
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB ?? 10),
   s3: {

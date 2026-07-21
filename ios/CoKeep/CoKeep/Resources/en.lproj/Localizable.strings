@@ -78,6 +78,11 @@
 "invite.sentPush" = "Invite sent as a push notification.";
 "invite.sentSms" = "Messages opened with your invite.";
 "invite.smsBody" = "%@ invited you to collaborate on “%@” in CoKeep. Install the app: %@";
+"invite.notOnCokeep" = "This person isn’t on CoKeep yet. The invite is saved — when they register with this phone number, they can accept it.";
+"invite.shareTestFlight" = "Share TestFlight invite";
+"invite.copyLink" = "Copy TestFlight link";
+"invite.linkCopied" = "Link copied.";
+"invite.shareBody" = "%@ invited you to collaborate on “%@” in CoKeep. Install the beta via TestFlight: %@ — then register with this phone number to accept the invite.";
 "invite.someone" = "Someone";
 "invite.objectFallback" = "a shared object";
 "invites.empty" = "No pending invites";
