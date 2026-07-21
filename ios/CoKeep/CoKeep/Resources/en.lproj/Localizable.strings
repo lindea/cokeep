@@ -8,6 +8,7 @@
 "welcome.signIn" = "Sign in";
 "common.back" = "Back";
 "common.cancel" = "Cancel";
+"common.done" = "Done";
 "common.save" = "Save";
 "common.delete" = "Delete";
 "common.deleting" = "Deleting…";

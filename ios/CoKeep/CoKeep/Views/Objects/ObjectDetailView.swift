@@ -321,9 +321,11 @@ struct InviteUserView: View {
     @State private var showContacts = false
     @State private var pendingContactPhone: String?
     @State private var objectName = ""
-    /// Non-user invite: share TestFlight instead of auto-opening App Store SMS.
+    /// Non-user invite: explain + share TestFlight, then close.
+    @State private var showNotOnCokeepAlert = false
     @State private var pendingShareText: String?
     @State private var pendingShareLink: String?
+    @State private var showShareSheet = false
 
     var body: some View {
         NavigationStack {
@@ -345,22 +347,6 @@ struct InviteUserView: View {
                             Label(L10n.string("invite.fromContacts"), systemImage: "person.crop.circle.badge.plus")
                         }
                         .disabled(loading)
-                    }
-
-                    if let pendingShareText, let pendingShareLink {
-                        Section {
-                            Text(L10n.string("invite.notOnCokeep"))
-                                .foregroundStyle(Theme.ink)
-                            ShareLink(item: pendingShareText) {
-                                Label(L10n.string("invite.shareTestFlight"), systemImage: "square.and.arrow.up")
-                            }
-                            Button {
-                                UIPasteboard.general.string = pendingShareLink
-                                message = L10n.string("invite.linkCopied")
-                            } label: {
-                                Label(L10n.string("invite.copyLink"), systemImage: "doc.on.doc")
-                            }
-                        }
                     }
 
                     if let message {
@@ -399,6 +385,33 @@ struct InviteUserView: View {
             }) {
                 ContactPhonePicker(isPresented: $showContacts) { selected in
                     pendingContactPhone = selected
+                }
+            }
+            .alert(
+                L10n.string("invite.title"),
+                isPresented: $showNotOnCokeepAlert
+            ) {
+                Button(L10n.string("invite.shareTestFlight")) {
+                    showShareSheet = true
+                }
+                Button(L10n.string("invite.copyLink")) {
+                    if let pendingShareLink {
+                        UIPasteboard.general.string = pendingShareLink
+                    }
+                    dismiss()
+                }
+                Button(L10n.string("common.done"), role: .cancel) {
+                    dismiss()
+                }
+            } message: {
+                Text(L10n.string("invite.notOnCokeep"))
+            }
+            .sheet(isPresented: $showShareSheet, onDismiss: {
+                dismiss()
+            }) {
+                if let pendingShareText {
+                    ActivityShareSheet(items: [pendingShareText])
+                        .presentationDetents([.medium, .large])
                 }
             }
             .task { await loadObjectName() }
@@ -454,7 +467,7 @@ struct InviteUserView: View {
                 body: Body(phone: phone, countryCode: country.code)
             )
             if resp.invite.recipientExists {
-                message = L10n.string("invite.sentPush")
+                dismiss()
                 return
             }
 
@@ -480,10 +493,11 @@ struct InviteUserView: View {
                     link: link
                 )
                 openSms(phone: phone, body: smsBody)
-                message = L10n.string("invite.sentSms")
+                dismiss()
             } else {
                 pendingShareLink = link
                 pendingShareText = shareBody
+                showNotOnCokeepAlert = true
             }
         } catch {
             self.error = error.localizedDescription
@@ -519,6 +533,17 @@ struct InviteUserView: View {
         guard let url = components.url else { return }
         UIApplication.shared.open(url)
     }
+}
+
+/// System share sheet wrapper.
+private struct ActivityShareSheet: UIViewControllerRepresentable {
+    var items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 /// Native contact picker that returns a phone number string.

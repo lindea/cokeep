@@ -8,6 +8,7 @@
 "welcome.signIn" = "Logg inn";
 "common.back" = "Tilbake";
 "common.cancel" = "Avbryt";
+"common.done" = "Ferdig";
 "common.save" = "Lagre";
 "common.delete" = "Slett";
 "common.deleting" = "Sletter…";
