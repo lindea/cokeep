@@ -21,6 +21,7 @@ struct RootView: View {
                 MainTabView()
                     .task {
                         await PushNotificationRegistrar.requestAuthorization()
+                        await PushNotificationRegistrar.flushPendingToken()
                         await BadgeStore.shared.refresh()
                     }
             } else if session.resetToken != nil {

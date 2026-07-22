@@ -266,6 +266,7 @@ struct CreateTodoItemView: View {
     let objectId: String
     var onDone: () -> Void
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SessionStore
 
     @State private var name = ""
     @State private var description = ""
@@ -342,6 +343,11 @@ struct CreateTodoItemView: View {
             struct Resp: Codable { let object: SharedObject }
             let resp: Resp = try await APIClient.shared.request("GET", path: "api/objects/\(objectId)")
             members = resp.object.members ?? []
+            // Default responsible person to the current user so due pushes have a recipient.
+            if assigneeId == nil, let me = session.user?.id,
+               members.contains(where: { $0.user.id == me }) {
+                assigneeId = me
+            }
         } catch {}
     }
 
@@ -357,8 +363,6 @@ struct CreateTodoItemView: View {
             let recurrence: String?
             let assigneeId: String?
         }
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime]
         do {
             struct Resp: Codable { let item: TodoItem }
             let _: Resp = try await APIClient.shared.request(
@@ -368,7 +372,7 @@ struct CreateTodoItemView: View {
                     name: name,
                     description: description.isEmpty ? nil : description,
                     scheduleType: scheduleType,
-                    dueDate: hasDueDate ? iso.string(from: dueDate) : nil,
+                    dueDate: hasDueDate ? Self.noonUtcISOString(from: dueDate) : nil,
                     recurrence: scheduleType == "RECURRING" ? recurrence : nil,
                     assigneeId: assigneeId
                 )
@@ -378,6 +382,22 @@ struct CreateTodoItemView: View {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    /// Stores date-only due dates as noon UTC of the selected local calendar day.
+    private static func noonUtcISOString(from date: Date) -> String {
+        let local = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        var utcCal = Calendar(identifier: .gregorian)
+        utcCal.timeZone = TimeZone(secondsFromGMT: 0)!
+        var parts = DateComponents()
+        parts.year = local.year
+        parts.month = local.month
+        parts.day = local.day
+        parts.hour = 12
+        let noon = utcCal.date(from: parts) ?? date
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime]
+        return iso.string(from: noon)
     }
 }
 

@@ -22,6 +22,7 @@ final class SessionStore: ObservableObject {
                 user = response.user
                 isAuthenticated = true
                 await syncPreferredLanguage()
+                await PushNotificationRegistrar.flushPendingToken()
             } catch {
                 clearSession()
             }
@@ -128,7 +129,10 @@ final class SessionStore: ObservableObject {
         APIClient.shared.authToken = response.token
         user = response.user
         isAuthenticated = true
-        Task { await syncPreferredLanguage() }
+        Task {
+            await syncPreferredLanguage()
+            await PushNotificationRegistrar.flushPendingToken()
+        }
     }
 
     /** Keeps server push copy in sync with the phone language (en / nb). */

@@ -20,7 +20,7 @@ Track and split maintenance work on co-owned property (cabins, shared homes, and
 - **Reports** — spendings & work: totals, per-user breakdown, preset/custom periods, list + charts
 - **Users & invites** — register, invite by phone / contacts; Messages compose for new users, push for existing
 - **Membership** — leave object anytime; creator can remove members
-- **Notifications** — due soon (7 days) and overdue push alerts
+- **Notifications** — due soon (within 7 calendar days) and overdue push alerts to the assignee
 - **Profile** — name, email, avatar; forgot-password email reset deep link
 - **Launch splash** — optional Markdown announcement / force-update gate (admin UI at `/admin`)
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../config/db";
 import { AuthenticatedRequest, requireAuth } from "../middleware/auth";
 import { AppError } from "../middleware/error";
+import { scheduleDueNotifications } from "../jobs/notifications";
 import { getTodoItemForUser, requireObjectMember } from "../services/access";
 import { serializeTodoItem, totalWorkMinutes } from "../services/todoSerializer";
 import { minutesBetween, publicUser } from "../utils/helpers";
@@ -186,6 +187,11 @@ router.post(
         include: { assignee: true, workLogs: true },
       });
 
+      // Items created already inside the due-soon window should notify without waiting for cron.
+      if (item.dueDate && item.assigneeId) {
+        scheduleDueNotifications();
+      }
+
       res.status(201).json({ item: serializeTodoItem(item) });
     } catch (err) {
       next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
@@ -238,17 +244,31 @@ router.patch("/todo-items/:itemId", async (req: AuthenticatedRequest, res, next)
     }
 
     const data: Record<string, unknown> = { ...body };
+    let shouldRecheckNotifications = false;
+
     if (body.dueDate !== undefined) {
       data.dueDate = body.dueDate ? new Date(body.dueDate) : null;
       data.dueSoonNotified = false;
       data.overdueNotified = false;
+      shouldRecheckNotifications = true;
     }
+
+    // Re-notify the (new) assignee when responsibility changes.
+    if (body.assigneeId !== undefined && body.assigneeId !== existing.assigneeId) {
+      data.dueSoonNotified = false;
+      data.overdueNotified = false;
+      shouldRecheckNotifications = true;
+    }
+
     if (body.isDone === true) {
       data.completedAt = new Date();
       data.completedById = req.user!.userId;
     } else if (body.isDone === false) {
       data.completedAt = null;
       data.completedById = null;
+      data.dueSoonNotified = false;
+      data.overdueNotified = false;
+      shouldRecheckNotifications = true;
     }
 
     const item = await prisma.todoItem.update({
@@ -256,6 +276,10 @@ router.patch("/todo-items/:itemId", async (req: AuthenticatedRequest, res, next)
       data,
       include: { assignee: true, workLogs: true },
     });
+
+    if (shouldRecheckNotifications && item.dueDate && item.assigneeId && !item.isDone) {
+      scheduleDueNotifications();
+    }
 
     res.json({ item: serializeTodoItem(item) });
   } catch (err) {

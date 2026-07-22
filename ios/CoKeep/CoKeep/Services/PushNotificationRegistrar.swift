@@ -8,18 +8,35 @@ enum PushNotificationRegistrar {
     static var onOpenInvites: (() -> Void)?
     static var onOpenTodo: ((String, String) -> Void)?
 
+    /// Held until the user is authenticated, then flushed to the API.
+    private static var pendingToken: String?
+
     static func requestAuthorization() async {
         let center = UNUserNotificationCenter.current()
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound])
             guard granted else { return }
             await UIApplication.shared.registerForRemoteNotifications()
+            await flushPendingToken()
         } catch {
             print("Push authorization failed: \(error)")
         }
     }
 
+    /// Stores the APNs token and uploads it once a session JWT is available.
     static func registerToken(_ token: String) async {
+        pendingToken = token
+        await flushPendingToken()
+    }
+
+    /// Uploads any deferred device token after login / bootstrap.
+    static func flushPendingToken() async {
+        guard let token = pendingToken else { return }
+        guard APIClient.shared.authToken != nil else {
+            print("Deferred device token registration until authenticated")
+            return
+        }
+
         struct Body: Encodable {
             let token: String
             let platform: String
