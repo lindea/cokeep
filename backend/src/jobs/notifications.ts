@@ -1,24 +1,23 @@
 import cron from "node-cron";
 import { prisma } from "../config/db";
 import { notifyUser } from "../services/push";
+import { dueSoonWindow, overdueBefore } from "../utils/dueDates";
 import {
   normalizeAppLang,
   todoDueSoonPushCopy,
   todoOverduePushCopy,
 } from "../utils/locale";
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-/** Checks open todos for due-soon (≤7 days) and overdue alerts. */
-export async function runDueNotifications(): Promise<void> {
-  const now = new Date();
-  const weekAhead = new Date(now.getTime() + WEEK_MS);
+/** Checks open todos for due-soon (≤7 calendar days) and overdue alerts. */
+export async function runDueNotifications(now: Date = new Date()): Promise<void> {
+  const { from: dueSoonFrom, to: dueSoonTo } = dueSoonWindow(now);
+  const overdueCutoff = overdueBefore(now);
 
   const dueSoon = await prisma.todoItem.findMany({
     where: {
       isDone: false,
       dueSoonNotified: false,
-      dueDate: { gte: now, lte: weekAhead },
+      dueDate: { gte: dueSoonFrom, lte: dueSoonTo },
       assigneeId: { not: null },
     },
     include: {
@@ -29,6 +28,8 @@ export async function runDueNotifications(): Promise<void> {
 
   for (const item of dueSoon) {
     if (!item.assigneeId || !item.dueDate) continue;
+    // Skip items that are already overdue by calendar day (handled below).
+    if (item.dueDate < overdueCutoff) continue;
     const lang = normalizeAppLang(item.assignee?.preferredLanguage);
     const copy = todoDueSoonPushCopy(lang, item.name, item.list.object.name);
     await notifyUser(item.assigneeId, "TODO_DUE_SOON", {
@@ -51,7 +52,7 @@ export async function runDueNotifications(): Promise<void> {
     where: {
       isDone: false,
       overdueNotified: false,
-      dueDate: { lt: now },
+      dueDate: { lt: overdueCutoff },
       assigneeId: { not: null },
     },
     include: {
@@ -81,11 +82,19 @@ export async function runDueNotifications(): Promise<void> {
   }
 }
 
+/** Fire-and-forget wrapper so request handlers never block on the job. */
+export function scheduleDueNotifications(): void {
+  runDueNotifications().catch((err) =>
+    console.error("Due notification job failed:", err)
+  );
+}
+
 export function startNotificationJobs(): void {
-  // Every hour
-  cron.schedule("0 * * * *", () => {
-    runDueNotifications().catch((err) =>
-      console.error("Due notification job failed:", err)
-    );
+  // Run immediately on boot (covers Heroku restarts / cold starts).
+  scheduleDueNotifications();
+
+  // Every 15 minutes — tighter than hourly so due-soon items are not delayed.
+  cron.schedule("*/15 * * * *", () => {
+    scheduleDueNotifications();
   });
 }

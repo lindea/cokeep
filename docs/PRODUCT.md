@@ -37,5 +37,5 @@ First-time path: Welcome → Register → empty Objects → Create (Cabin/Generi
 |---------|--------------|------------|
 | Invites (new users) | iOS opens Messages with prefilled body | Same |
 | Email reset | Console log | SMTP |
-| Push | Console + in-app Notification rows | APNs |
+| Push | Console + in-app Notification rows | APNs (due soon ≤7 calendar days + overdue, assignee only) |
 | Launch splash | Disabled by default | `/admin` + `ADMIN_*` env |

@@ -58,7 +58,21 @@ export const config = {
     /** Raw .p8 key contents (for Heroku). Supports literal newlines or `\\n` escapes. */
     key: process.env.APNS_KEY || "",
     keyPath: process.env.APNS_KEY_PATH || "",
+    /**
+     * Use APNs production gateway when true.
+     * Defaults to true in production (matches TestFlight / App Store entitlements).
+     * Set APNS_PRODUCTION=false only when debugging with a sandbox/development build.
+     */
+    production:
+      process.env.APNS_PRODUCTION === "true" ||
+      (process.env.APNS_PRODUCTION !== "false" &&
+        (process.env.NODE_ENV ?? "development") === "production"),
   },
+  /**
+   * Optional shared secret for POST /api/internal/run-due-notifications
+   * (e.g. Heroku Scheduler). Disabled when empty.
+   */
+  cronSecret: process.env.CRON_SECRET || "",
   admin: {
     username: process.env.ADMIN_USERNAME || "admin",
     /** Plain password checked at login (hash would be better long-term; env is fine for small ops). */

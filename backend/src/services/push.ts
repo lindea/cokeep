@@ -41,10 +41,13 @@ export function initPushService(): void {
         keyId: config.apns.keyId,
         teamId: config.apns.teamId,
       },
-      production: config.nodeEnv === "production",
+      production: config.apns.production,
     });
     const source = config.apns.key.trim() ? "APNS_KEY env" : config.apns.keyPath;
-    console.log(`[push] APNs enabled (${config.apns.bundleId}, key from ${source})`);
+    const gateway = config.apns.production ? "production" : "sandbox";
+    console.log(
+      `[push] APNs enabled (${config.apns.bundleId}, ${gateway}, key from ${source})`
+    );
   } else {
     console.log("[push] No APNs credentials configured; notifications are logged only");
   }
