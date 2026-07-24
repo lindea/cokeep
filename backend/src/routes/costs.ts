@@ -10,6 +10,32 @@ const router = Router();
 
 router.use(requireAuth);
 
+type CostWithRelations = {
+  id: string;
+  amountCents: number;
+  currency: string;
+  description: string | null;
+  receiptUrl: string | null;
+  spentAt: Date;
+  todoItemId: string | null;
+  todoItem: { name: string } | null;
+  user: Parameters<typeof publicUser>[0];
+};
+
+function serializeCost(c: CostWithRelations) {
+  return {
+    id: c.id,
+    amountCents: c.amountCents,
+    currency: c.currency,
+    description: c.description,
+    receiptUrl: c.receiptUrl,
+    spentAt: c.spentAt,
+    todoItemId: c.todoItemId,
+    todoItemName: c.todoItem?.name ?? null,
+    user: publicUser(c.user),
+  };
+}
+
 router.get(
   "/objects/:objectId/costs",
   async (req: AuthenticatedRequest, res, next) => {
@@ -22,17 +48,7 @@ router.get(
       });
 
       res.json({
-        costs: costs.map((c) => ({
-          id: c.id,
-          amountCents: c.amountCents,
-          currency: c.currency,
-          description: c.description,
-          receiptUrl: c.receiptUrl,
-          spentAt: c.spentAt,
-          todoItemId: c.todoItemId,
-          todoItemName: c.todoItem?.name ?? null,
-          user: publicUser(c.user),
-        })),
+        costs: costs.map(serializeCost),
       });
     } catch (err) {
       next(err);
@@ -81,23 +97,79 @@ router.post(
       });
 
       res.status(201).json({
-        cost: {
-          id: cost.id,
-          amountCents: cost.amountCents,
-          currency: cost.currency,
-          description: cost.description,
-          receiptUrl: cost.receiptUrl,
-          spentAt: cost.spentAt,
-          todoItemId: cost.todoItemId,
-          todoItemName: cost.todoItem?.name ?? null,
-          user: publicUser(cost.user),
-        },
+        cost: serializeCost(cost),
       });
     } catch (err) {
       next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
     }
   }
 );
+
+router.get("/costs/:costId", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const cost = await prisma.cost.findUnique({
+      where: { id: req.params.costId },
+      include: { user: true, todoItem: true },
+    });
+    if (!cost) throw new AppError(404, "Cost not found");
+    await requireObjectMember(cost.objectId, req.user!.userId);
+    res.json({ cost: serializeCost(cost) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch("/costs/:costId", async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const cost = await prisma.cost.findUnique({
+      where: { id: req.params.costId },
+      include: { user: true, todoItem: true },
+    });
+    if (!cost) throw new AppError(404, "Cost not found");
+    await requireObjectMember(cost.objectId, req.user!.userId);
+    if (cost.userId !== req.user!.userId) {
+      throw new AppError(403, "Only the person who logged the cost can edit it");
+    }
+
+    const body = z
+      .object({
+        amountCents: z.number().int().positive().optional(),
+        currency: z.string().length(3).optional(),
+        description: z.string().max(500).nullable().optional(),
+        receiptUrl: z.string().url().nullable().optional(),
+        todoItemId: z.string().uuid().nullable().optional(),
+        spentAt: z.string().datetime().optional(),
+      })
+      .parse(req.body);
+
+    if (body.todoItemId) {
+      const item = await prisma.todoItem.findUnique({
+        where: { id: body.todoItemId },
+        include: { list: true },
+      });
+      if (!item || item.list.objectId !== cost.objectId) {
+        throw new AppError(400, "Todo item does not belong to this object");
+      }
+    }
+
+    const updated = await prisma.cost.update({
+      where: { id: cost.id },
+      data: {
+        amountCents: body.amountCents ?? cost.amountCents,
+        currency: body.currency ? body.currency.toUpperCase() : cost.currency,
+        description: body.description !== undefined ? body.description : cost.description,
+        receiptUrl: body.receiptUrl !== undefined ? body.receiptUrl : cost.receiptUrl,
+        todoItemId: body.todoItemId !== undefined ? body.todoItemId : cost.todoItemId,
+        spentAt: body.spentAt ? new Date(body.spentAt) : cost.spentAt,
+      },
+      include: { user: true, todoItem: true },
+    });
+
+    res.json({ cost: serializeCost(updated) });
+  } catch (err) {
+    next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
+  }
+});
 
 router.delete("/costs/:costId", async (req: AuthenticatedRequest, res, next) => {
   try {

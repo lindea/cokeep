@@ -625,32 +625,35 @@ struct LogWorkView: View {
     var onDone: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @State private var startedAt = Date().addingTimeInterval(-3600)
-    @State private var endedAt: Date?
-    @State private var hasEndTime = false
+    @State private var startedAt: Date
+    @State private var endedAt: Date
     @State private var note = ""
     @State private var error: String?
     @State private var loading = false
+
+    private var canSave: Bool {
+        endedAt > startedAt
+    }
+
+    init(itemId: String, onDone: @escaping () -> Void) {
+        self.itemId = itemId
+        self.onDone = onDone
+        let start = Date().addingTimeInterval(-3600)
+        _startedAt = State(initialValue: start)
+        _endedAt = State(initialValue: start.addingTimeInterval(3600))
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 DatePicker(L10n.string("todos.started"), selection: $startedAt)
-                
-                Toggle(L10n.string("todos.setEndTime"), isOn: $hasEndTime)
-                
-                if hasEndTime {
-                    DatePicker(L10n.string("todos.ended"), selection: Binding(
-                        get: { endedAt ?? Date() },
-                        set: { endedAt = $0 }
-                    ))
-                } else {
-                    Text("End time will be set to now when you save")
-                        .font(.caption)
-                        .foregroundStyle(Theme.muted)
-                }
-                
+                DatePicker(L10n.string("todos.ended"), selection: $endedAt)
+
                 TextField(L10n.string("todos.note"), text: $note, axis: .vertical)
+                if !canSave {
+                    Text(L10n.string("todos.endBeforeStart"))
+                        .foregroundStyle(Theme.danger)
+                }
                 if let error {
                     Text(error).foregroundStyle(Theme.danger)
                 }
@@ -665,6 +668,7 @@ struct LogWorkView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     BusyToolbarButton(
                         title: L10n.string("common.save"),
+                        enabled: canSave,
                         loading: loading
                     ) {
                         Task { await save() }
@@ -675,15 +679,8 @@ struct LogWorkView: View {
     }
 
     private func save() async {
-        guard !loading else { return }
-        
-        let finalEndTime = hasEndTime ? (endedAt ?? Date()) : Date()
-        
-        if finalEndTime <= startedAt {
-            error = L10n.string("todos.endBeforeStart")
-            return
-        }
-        
+        guard !loading, canSave else { return }
+
         loading = true
         defer { loading = false }
         let iso = ISO8601DateFormatter()
@@ -702,7 +699,7 @@ struct LogWorkView: View {
                 path: "api/todo-items/\(itemId)/logs",
                 body: Body(
                     startedAt: iso.string(from: startedAt),
-                    endedAt: iso.string(from: finalEndTime),
+                    endedAt: iso.string(from: endedAt),
                     note: note.isEmpty ? nil : note
                 )
             )
@@ -834,6 +831,10 @@ struct EditWorkLogView: View {
     @State private var error: String?
     @State private var loading = false
 
+    private var canSave: Bool {
+        endedAt > startedAt
+    }
+
     init(itemId: String, log: WorkLogEntry, onDone: @escaping () -> Void) {
         self.itemId = itemId
         self.log = log
@@ -849,6 +850,10 @@ struct EditWorkLogView: View {
                 DatePicker(L10n.string("todos.started"), selection: $startedAt)
                 DatePicker(L10n.string("todos.ended"), selection: $endedAt)
                 TextField(L10n.string("todos.note"), text: $note, axis: .vertical)
+                if !canSave {
+                    Text(L10n.string("todos.endBeforeStart"))
+                        .foregroundStyle(Theme.danger)
+                }
                 if let error {
                     Text(error).foregroundStyle(Theme.danger)
                 }
@@ -863,6 +868,7 @@ struct EditWorkLogView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     BusyToolbarButton(
                         title: L10n.string("common.save"),
+                        enabled: canSave,
                         loading: loading
                     ) {
                         Task { await save() }
@@ -873,13 +879,8 @@ struct EditWorkLogView: View {
     }
 
     private func save() async {
-        guard !loading else { return }
-        
-        if endedAt <= startedAt {
-            error = L10n.string("todos.endBeforeStart")
-            return
-        }
-        
+        guard !loading, canSave else { return }
+
         loading = true
         defer { loading = false }
         let iso = ISO8601DateFormatter()

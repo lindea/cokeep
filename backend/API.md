@@ -61,7 +61,7 @@ Auth: `Authorization: Bearer <token>` on protected routes.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET/POST | `/api/objects/:id/costs` | List / create costs |
-| DELETE | `/api/costs/:costId` | Delete own cost |
+| GET/PATCH/DELETE | `/api/costs/:costId` | Get / edit / delete own cost |
 | GET | `/api/objects/:id/reports/spendings` | `?period=week\|month\|quarter\|year\|all\|custom&from=&to=` |
 | GET | `/api/objects/:id/reports/work` | Same period query; minutes + per-user + chart |
 

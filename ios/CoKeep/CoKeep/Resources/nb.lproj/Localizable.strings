@@ -54,6 +54,12 @@
 "todos.deleteListConfirm" = "Slette denne listen og alle oppgavene?";
 "costs.delete" = "Slett kostnad";
 "costs.deleteConfirm" = "Slette denne kostnadsposten?";
+"costs.detail" = "Kostnad";
+"costs.edit" = "Rediger kostnad";
+"costs.date" = "Dato";
+"costs.receipt" = "Kvittering";
+"costs.removeReceipt" = "Fjern kvittering";
+"costs.linkedTodo" = "Koblet gjøremål";
 "objects.addPhoto" = "Legg til bilde";
 "objects.changePhoto" = "Bytt bilde";
 "objects.removePhoto" = "Fjern bilde";
@@ -94,7 +100,7 @@
 "todos.newList" = "Ny liste";
 "todos.list.maintenance" = "Vedlikehold";
 "todos.list.seasonal" = "Sesong";
-"todos.list.shopping" = "Handling";
+"todos.list.shopping" = "Innkjøp";
 "todos.listName" = "Listenavn";
 "todos.noOpen" = "Ingen åpne oppgaver";
 "todos.doneSection" = "Fullført";
@@ -120,7 +126,6 @@
 "todos.deleteLogConfirm" = "Slette denne arbeidsloggen?";
 "todos.endBeforeStart" = "Sluttidspunkt må være etter starttidspunkt";
 "todos.editItem" = "Rediger oppgave";
-"todos.setEndTime" = "Angi sluttidspunkt";
 "recurrence.weekly" = "Ukentlig";
 "recurrence.biweekly" = "Annenhver uke";
 "recurrence.monthly" = "Månedlig";

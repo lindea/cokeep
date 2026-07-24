@@ -22,6 +22,12 @@
 "todos.deleteListConfirm" = "Delete this list and all its items?";
 "costs.delete" = "Delete cost";
 "costs.deleteConfirm" = "Delete this cost entry?";
+"costs.detail" = "Cost";
+"costs.edit" = "Edit cost";
+"costs.date" = "Date";
+"costs.receipt" = "Receipt";
+"costs.removeReceipt" = "Remove receipt";
+"costs.linkedTodo" = "Linked to-do";
 "login.title" = "Welcome back";
 "login.forgot" = "Forgot password?";
 "login.submit" = "Sign in";
@@ -120,7 +126,6 @@
 "todos.deleteLogConfirm" = "Delete this work log entry?";
 "todos.endBeforeStart" = "End time must be after start time";
 "todos.editItem" = "Edit item";
-"todos.setEndTime" = "Set end time";
 "recurrence.weekly" = "Weekly";
 "recurrence.biweekly" = "Every 2 weeks";
 "recurrence.monthly" = "Monthly";
