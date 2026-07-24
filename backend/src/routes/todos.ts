@@ -346,4 +346,97 @@ router.post(
   }
 );
 
+router.patch(
+  "/work-logs/:logId",
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const log = await prisma.workLog.findUnique({
+        where: { id: req.params.logId },
+        include: { todoItem: { include: { list: true } }, user: true },
+      });
+      if (!log) throw new AppError(404, "Work log not found");
+
+      await requireObjectMember(log.todoItem.list.objectId, req.user!.userId);
+
+      if (log.userId !== req.user!.userId) {
+        throw new AppError(403, "You can only edit your own work logs");
+      }
+
+      const body = z
+        .object({
+          startedAt: z.string().datetime().optional(),
+          endedAt: z.string().datetime().optional(),
+          note: z.string().max(1000).nullable().optional(),
+        })
+        .parse(req.body);
+
+      const startedAt = body.startedAt ? new Date(body.startedAt) : log.startedAt;
+      const endedAt = body.endedAt ? new Date(body.endedAt) : log.endedAt;
+
+      if (endedAt <= startedAt) {
+        throw new AppError(400, "End time must be after start time");
+      }
+
+      const updated = await prisma.workLog.update({
+        where: { id: log.id },
+        data: {
+          startedAt,
+          endedAt,
+          note: body.note !== undefined ? body.note : log.note,
+        },
+        include: { user: true },
+      });
+
+      const logs = await prisma.workLog.findMany({
+        where: { todoItemId: log.todoItemId },
+      });
+
+      res.json({
+        log: {
+          id: updated.id,
+          startedAt: updated.startedAt,
+          endedAt: updated.endedAt,
+          durationMinutes: minutesBetween(updated.startedAt, updated.endedAt),
+          note: updated.note,
+          user: publicUser(updated.user),
+        },
+        totalWorkMinutes: totalWorkMinutes(logs),
+      });
+    } catch (err) {
+      next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
+    }
+  }
+);
+
+router.delete(
+  "/work-logs/:logId",
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const log = await prisma.workLog.findUnique({
+        where: { id: req.params.logId },
+        include: { todoItem: { include: { list: true } } },
+      });
+      if (!log) throw new AppError(404, "Work log not found");
+
+      await requireObjectMember(log.todoItem.list.objectId, req.user!.userId);
+
+      if (log.userId !== req.user!.userId) {
+        throw new AppError(403, "You can only delete your own work logs");
+      }
+
+      const todoItemId = log.todoItemId;
+      await prisma.workLog.delete({ where: { id: log.id } });
+
+      const logs = await prisma.workLog.findMany({ where: { todoItemId } });
+
+      res.json({
+        ok: true,
+        totalWorkMinutes: totalWorkMinutes(logs),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 export default router;

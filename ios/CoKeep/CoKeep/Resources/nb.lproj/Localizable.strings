@@ -115,6 +115,12 @@
 "todos.started" = "Startet";
 "todos.ended" = "Avsluttet";
 "todos.note" = "Notat";
+"todos.editLog" = "Rediger logg";
+"todos.deleteLog" = "Slett logg";
+"todos.deleteLogConfirm" = "Slette denne arbeidsloggen?";
+"todos.endBeforeStart" = "Sluttidspunkt må være etter starttidspunkt";
+"todos.editItem" = "Rediger oppgave";
+"todos.setEndTime" = "Angi sluttidspunkt";
 "recurrence.weekly" = "Ukentlig";
 "recurrence.biweekly" = "Annenhver uke";
 "recurrence.monthly" = "Månedlig";

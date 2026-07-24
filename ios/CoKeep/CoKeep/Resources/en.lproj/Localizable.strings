@@ -115,6 +115,12 @@
 "todos.started" = "Started";
 "todos.ended" = "Ended";
 "todos.note" = "Note";
+"todos.editLog" = "Edit log";
+"todos.deleteLog" = "Delete log";
+"todos.deleteLogConfirm" = "Delete this work log entry?";
+"todos.endBeforeStart" = "End time must be after start time";
+"todos.editItem" = "Edit item";
+"todos.setEndTime" = "Set end time";
 "recurrence.weekly" = "Weekly";
 "recurrence.biweekly" = "Every 2 weeks";
 "recurrence.monthly" = "Monthly";
