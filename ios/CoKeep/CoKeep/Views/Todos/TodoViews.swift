@@ -501,10 +501,14 @@ struct TodoItemDetailView: View {
                                             Button {
                                                 selectedPhoto = photo
                                             } label: {
-                                                CachedRemoteImage(url: photo.imageUrl)
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 100, height: 100)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                CachedRemoteImage(url: URL(string: photo.imageUrl)) { image in
+                                                    image.resizable().scaledToFill()
+                                                } placeholder: {
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(Theme.cardFill)
+                                                }
+                                                .frame(width: 100, height: 100)
+                                                .clipShape(RoundedRectangle(cornerRadius: 12))
                                             }
                                         }
                                     }
@@ -1226,9 +1230,12 @@ struct TodoPhotoDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    CachedRemoteImage(url: photo.imageUrl)
-                        .aspectRatio(contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    CachedRemoteImage(url: URL(string: photo.imageUrl)) { image in
+                        image.resizable().scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                     
                     if let caption = photo.caption, !caption.isEmpty {
                         Text(caption)
