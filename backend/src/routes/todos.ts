@@ -201,7 +201,23 @@ router.post(
 
 router.get("/todo-items/:itemId", async (req: AuthenticatedRequest, res, next) => {
   try {
-    const item = await getTodoItemForUser(req.params.itemId, req.user!.userId);
+    const item = await prisma.todoItem.findUnique({
+      where: { id: req.params.itemId },
+      include: {
+        list: true,
+        assignee: true,
+        workLogs: {
+          include: { user: true },
+          orderBy: { startedAt: "desc" },
+        },
+        photos: {
+          orderBy: { sortOrder: "asc" },
+        },
+      },
+    });
+    if (!item) throw new AppError(404, "Todo item not found");
+    await requireObjectMember(item.list.objectId, req.user!.userId);
+
     res.json({
       item: {
         ...serializeTodoItem(item),
@@ -213,6 +229,12 @@ router.get("/todo-items/:itemId", async (req: AuthenticatedRequest, res, next) =
           durationMinutes: minutesBetween(log.startedAt, log.endedAt),
           note: log.note,
           user: publicUser(log.user),
+        })),
+        photos: item.photos.map((photo) => ({
+          id: photo.id,
+          imageUrl: photo.imageUrl,
+          caption: photo.caption,
+          sortOrder: photo.sortOrder,
         })),
       },
     });
@@ -433,6 +455,66 @@ router.delete(
         ok: true,
         totalWorkMinutes: totalWorkMinutes(logs),
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  "/todo-items/:itemId/photos",
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const item = await getTodoItemForUser(req.params.itemId, req.user!.userId);
+      const body = z
+        .object({
+          imageUrl: z.string().url(),
+          caption: z.string().max(200).nullable().optional(),
+        })
+        .parse(req.body);
+
+      const count = await prisma.todoItemPhoto.count({
+        where: { todoItemId: item.id },
+      });
+
+      const photo = await prisma.todoItemPhoto.create({
+        data: {
+          todoItemId: item.id,
+          imageUrl: body.imageUrl,
+          caption: body.caption ?? null,
+          sortOrder: count,
+        },
+      });
+
+      res.status(201).json({
+        photo: {
+          id: photo.id,
+          imageUrl: photo.imageUrl,
+          caption: photo.caption,
+          sortOrder: photo.sortOrder,
+        },
+      });
+    } catch (err) {
+      next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
+    }
+  }
+);
+
+router.delete(
+  "/todo-item-photos/:photoId",
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const photo = await prisma.todoItemPhoto.findUnique({
+        where: { id: req.params.photoId },
+        include: { todoItem: { include: { list: true } } },
+      });
+      if (!photo) throw new AppError(404, "Photo not found");
+
+      await requireObjectMember(photo.todoItem.list.objectId, req.user!.userId);
+
+      await prisma.todoItemPhoto.delete({ where: { id: photo.id } });
+
+      res.json({ ok: true });
     } catch (err) {
       next(err);
     }

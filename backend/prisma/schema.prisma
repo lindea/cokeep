@@ -192,16 +192,31 @@ model TodoItem {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  list        TodoList  @relation(fields: [listId], references: [id], onDelete: Cascade)
-  assignee    User?     @relation("TodoAssignee", fields: [assigneeId], references: [id])
-  completedBy User?     @relation("TodoCompleter", fields: [completedById], references: [id])
+  list        TodoList        @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee    User?           @relation("TodoAssignee", fields: [assigneeId], references: [id])
+  completedBy User?           @relation("TodoCompleter", fields: [completedById], references: [id])
   workLogs    WorkLog[]
   costs       Cost[]
+  photos      TodoItemPhoto[]
 
   @@index([listId])
   @@index([assigneeId])
   @@index([dueDate])
   @@index([isDone])
+}
+
+model TodoItemPhoto {
+  id         String   @id @default(uuid())
+  todoItemId String
+  imageUrl   String
+  caption    String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  todoItem TodoItem @relation(fields: [todoItemId], references: [id], onDelete: Cascade)
+
+  @@index([todoItemId])
 }
 
 model WorkLog {

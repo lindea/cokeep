@@ -126,6 +126,11 @@
 "todos.deleteLogConfirm" = "Delete this work log entry?";
 "todos.endBeforeStart" = "End time must be after start time";
 "todos.editItem" = "Edit item";
+"todos.photos" = "Photos";
+"todos.addPhoto" = "Add photo";
+"todos.deletePhoto" = "Delete photo";
+"todos.deletePhotoConfirm" = "Delete this photo?";
+"todos.photoCaption" = "Caption (optional)";
 "recurrence.weekly" = "Weekly";
 "recurrence.biweekly" = "Every 2 weeks";
 "recurrence.monthly" = "Monthly";
