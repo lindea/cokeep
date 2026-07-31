@@ -1,0 +1,75 @@
+{
+  "name": "CoKeep",
+  "description": "Track and split maintenance work on co-owned property",
+  "repository": "https://github.com/lindea/cokeep",
+  "keywords": ["nodejs", "express", "postgresql", "prisma"],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "JWT_SECRET": {
+      "description": "Secret key for JWT tokens",
+      "generator": "secret"
+    },
+    "ADMIN_USERNAME": {
+      "description": "Admin dashboard username",
+      "value": "admin",
+      "required": false
+    },
+    "ADMIN_PASSWORD": {
+      "description": "Admin dashboard password",
+      "generator": "secret",
+      "required": false
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0",
+      "options": {
+        "version": "16"
+      }
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "environments": {
+    "test": {
+      "env": {
+        "NODE_ENV": {
+          "value": "test"
+        },
+        "JWT_SECRET": {
+          "value": "test-secret-for-heroku-ci"
+        }
+      },
+      "scripts": {
+        "test-setup": "cd backend && npm ci && npx prisma migrate deploy",
+        "test": "cd backend && npm test"
+      },
+      "formation": {
+        "test": {
+          "quantity": 1,
+          "size": "standard-1x"
+        }
+      },
+      "addons": [
+        {
+          "plan": "heroku-postgresql:standard-0",
+          "options": {
+            "version": "16"
+          }
+        }
+      ]
+    }
+  }
+}
