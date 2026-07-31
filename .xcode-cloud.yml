@@ -1,0 +1,46 @@
+# Xcode Cloud Configuration
+# This file helps configure Xcode Cloud workflows
+
+# Note: Xcode Cloud configuration is primarily done through Xcode or App Store Connect
+# This file serves as documentation for the recommended setup
+
+workflows:
+  - name: "PR Validation"
+    description: "Run tests on pull requests"
+    trigger:
+      pull_request:
+        branches:
+          - cursor/cokeep-maintenance-app-72f3
+    actions:
+      - name: "Test"
+        scheme: "CoKeep"
+        platform: "iOS"
+        destination: "platform=iOS Simulator,name=iPhone 15,OS=17.0"
+        test_plan: "CoKeep"
+        
+  - name: "Main Branch Tests"
+    description: "Run tests on main branch commits"
+    trigger:
+      push:
+        branches:
+          - cursor/cokeep-maintenance-app-72f3
+    actions:
+      - name: "Test"
+        scheme: "CoKeep"
+        platform: "iOS"
+        destination: "platform=iOS Simulator,name=iPhone 15,OS=17.0"
+        test_plan: "CoKeep"
+      - name: "Archive"
+        scheme: "CoKeep"
+        platform: "iOS"
+        export_options:
+          method: "development"
+
+# Environment Variables (set in Xcode Cloud):
+# - API_BASE_URL: Base URL for the API (staging or production)
+# - Any secrets needed for testing
+
+# Test Plans:
+# - Create a test plan in Xcode named "CoKeep" that includes CoKeepTests target
+# - Configure test plan to run all unit tests
+# - Can add UI tests later by creating CoKeepUITests target
