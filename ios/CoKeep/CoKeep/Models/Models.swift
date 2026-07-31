@@ -72,6 +72,14 @@ struct TodoItem: Codable, Identifiable, Hashable {
     var totalWorkMinutes: Int?
     var hasUnreadAlert: Bool?
     var logs: [WorkLogEntry]?
+    var photos: [TodoItemPhoto]?
+}
+
+struct TodoItemPhoto: Codable, Identifiable, Hashable {
+    let id: String
+    var imageUrl: String
+    var caption: String?
+    var sortOrder: Int
 }
 
 struct Assignee: Codable, Hashable {

@@ -126,6 +126,11 @@
 "todos.deleteLogConfirm" = "Slette denne arbeidsloggen?";
 "todos.endBeforeStart" = "Sluttidspunkt må være etter starttidspunkt";
 "todos.editItem" = "Rediger oppgave";
+"todos.photos" = "Bilder";
+"todos.addPhoto" = "Legg til bilde";
+"todos.deletePhoto" = "Slett bilde";
+"todos.deletePhotoConfirm" = "Slette dette bildet?";
+"todos.photoCaption" = "Bildetekst (valgfritt)";
 "recurrence.weekly" = "Ukentlig";
 "recurrence.biweekly" = "Annenhver uke";
 "recurrence.monthly" = "Månedlig";

@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct TodoListsView: View {
     let objectId: String
@@ -410,6 +411,8 @@ struct TodoItemDetailView: View {
     @State private var showLog = false
     @State private var selectedLog: WorkLogEntry?
     @State private var showEditItem = false
+    @State private var showAddPhoto = false
+    @State private var selectedPhoto: TodoItemPhoto?
     @State private var members: [ObjectMember] = []
     @State private var confirmDelete = false
     @State private var deleting = false
@@ -478,6 +481,51 @@ struct TodoItemDetailView: View {
                             }
                         }
 
+                        if let photos = item.photos, !photos.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Label(L10n.string("todos.photos"), systemImage: "photo")
+                                        .font(.headline)
+                                    Spacer()
+                                    Button {
+                                        showAddPhoto = true
+                                    } label: {
+                                        Image(systemName: "plus.circle.fill")
+                                            .foregroundStyle(Theme.accent)
+                                    }
+                                }
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 10) {
+                                        ForEach(photos) { photo in
+                                            Button {
+                                                selectedPhoto = photo
+                                            } label: {
+                                                CachedRemoteImage(url: photo.imageUrl)
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 100, height: 100)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            HStack {
+                                Label(L10n.string("todos.photos"), systemImage: "photo")
+                                    .font(.subheadline)
+                                    .foregroundStyle(Theme.muted)
+                                Spacer()
+                                Button {
+                                    showAddPhoto = true
+                                } label: {
+                                    Image(systemName: "plus.circle")
+                                        .foregroundStyle(Theme.accent)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+
                         Button(L10n.string("todos.deleteItem"), role: .destructive) {
                             confirmDelete = true
                         }
@@ -532,6 +580,28 @@ struct TodoItemDetailView: View {
             if let item {
                 EditTodoItemView(item: item, objectId: item.objectId ?? "") {
                     showEditItem = false
+                    Task {
+                        await load()
+                        onChange()
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAddPhoto) {
+            if item != nil {
+                AddTodoPhotoView(itemId: itemId) {
+                    showAddPhoto = false
+                    Task {
+                        await load()
+                        onChange()
+                    }
+                }
+            }
+        }
+        .sheet(item: $selectedPhoto) { photo in
+            if item != nil {
+                TodoPhotoDetailView(itemId: itemId, photo: photo) {
+                    selectedPhoto = nil
                     Task {
                         await load()
                         onChange()
@@ -647,6 +717,9 @@ struct LogWorkView: View {
         NavigationStack {
             Form {
                 DatePicker(L10n.string("todos.started"), selection: $startedAt)
+                    .onChange(of: startedAt) { _, newValue in
+                        endedAt = newValue.addingTimeInterval(3600)
+                    }
                 DatePicker(L10n.string("todos.ended"), selection: $endedAt)
 
                 TextField(L10n.string("todos.note"), text: $note, axis: .vertical)
@@ -1058,6 +1131,152 @@ struct EditTodoItemView: View {
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime]
         return iso.string(from: noon)
+    }
+}
+
+struct AddTodoPhotoView: View {
+    let itemId: String
+    var onDone: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var caption = ""
+    @State private var uploading = false
+    @State private var error: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                PhotosPicker(selection: $selectedItem, matching: .images) {
+                    Label(L10n.string("todos.addPhoto"), systemImage: "photo.on.rectangle")
+                }
+                
+                if selectedItem != nil {
+                    TextField(L10n.string("todos.photoCaption"), text: $caption, axis: .vertical)
+                        .lineLimit(2...4)
+                }
+                
+                if let error {
+                    Text(error).foregroundStyle(Theme.danger)
+                }
+            }
+            .navigationTitle(L10n.string("todos.addPhoto"))
+            .disabled(uploading)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(uploading)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    BusyToolbarButton(
+                        title: L10n.string("common.save"),
+                        enabled: selectedItem != nil,
+                        loading: uploading
+                    ) {
+                        Task { await save() }
+                    }
+                }
+            }
+        }
+    }
+
+    private func save() async {
+        guard !uploading, let item = selectedItem else { return }
+        uploading = true
+        defer { uploading = false }
+
+        do {
+            let jpegData = try await item.jpegDataForUpload()
+            let imageUrl = try await APIClient.shared.uploadImage(jpegData, filename: "photo.jpg")
+
+            struct Body: Encodable {
+                let imageUrl: String
+                let caption: String?
+            }
+            struct Resp: Codable {
+                struct Photo: Codable { let id: String }
+                let photo: Photo
+            }
+            let _: Resp = try await APIClient.shared.request(
+                "POST",
+                path: "api/todo-items/\(itemId)/photos",
+                body: Body(
+                    imageUrl: imageUrl,
+                    caption: caption.isEmpty ? nil : caption
+                )
+            )
+            onDone()
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
+struct TodoPhotoDetailView: View {
+    let itemId: String
+    let photo: TodoItemPhoto
+    var onDone: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var confirmDelete = false
+    @State private var deleting = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 18) {
+                    CachedRemoteImage(url: photo.imageUrl)
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    if let caption = photo.caption, !caption.isEmpty {
+                        Text(caption)
+                            .font(.body)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                    }
+                    
+                    Button(L10n.string("todos.deletePhoto"), role: .destructive) {
+                        confirmDelete = true
+                    }
+                    .disabled(deleting)
+                    .padding(.top, 8)
+                }
+                .padding(20)
+            }
+            .background(Theme.background.ignoresSafeArea())
+            .navigationTitle(L10n.string("todos.photos"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.string("common.cancel")) { dismiss() }
+                        .disabled(deleting)
+                }
+            }
+            .confirmationDialog(
+                L10n.string("todos.deletePhotoConfirm"),
+                isPresented: $confirmDelete,
+                titleVisibility: .visible
+            ) {
+                Button(L10n.string("common.delete"), role: .destructive) {
+                    Task { await deletePhoto() }
+                }
+                Button(L10n.string("common.cancel"), role: .cancel) {}
+            }
+        }
+    }
+
+    private func deletePhoto() async {
+        guard !deleting else { return }
+        deleting = true
+        defer { deleting = false }
+        struct Ok: Codable { let ok: Bool? }
+        do {
+            let _: Ok = try await APIClient.shared.request("DELETE", path: "api/todo-item-photos/\(photo.id)")
+            onDone()
+            dismiss()
+        } catch {}
     }
 }
 
