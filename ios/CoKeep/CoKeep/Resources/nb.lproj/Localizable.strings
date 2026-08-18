@@ -10,6 +10,7 @@
 "common.cancel" = "Avbryt";
 "common.done" = "Ferdig";
 "common.save" = "Lagre";
+"common.edit" = "Rediger";
 "common.delete" = "Slett";
 "common.deleting" = "Sletter…";
 "common.saving" = "Lagrer…";

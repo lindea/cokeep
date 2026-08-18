@@ -10,6 +10,7 @@
 "common.cancel" = "Cancel";
 "common.done" = "Done";
 "common.save" = "Save";
+"common.edit" = "Edit";
 "common.delete" = "Delete";
 "common.deleting" = "Deleting…";
 "common.saving" = "Saving…";

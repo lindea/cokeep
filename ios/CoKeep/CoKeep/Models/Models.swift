@@ -70,6 +70,7 @@ struct TodoItem: Codable, Identifiable, Hashable {
     var completedAt: String?
     var completedById: String?
     var totalWorkMinutes: Int?
+    var photoCount: Int?
     var hasUnreadAlert: Bool?
     var logs: [WorkLogEntry]?
     var photos: [TodoItemPhoto]?

@@ -46,6 +46,7 @@ router.get(
               include: {
                 assignee: true,
                 workLogs: true,
+                photos: { select: { id: true } },
               },
             },
           },
@@ -184,7 +185,7 @@ router.post(
           recurrence: schedule.scheduleType === "RECURRING" ? schedule.recurrence : null,
           assigneeId: base.assigneeId ?? null,
         },
-        include: { assignee: true, workLogs: true },
+        include: { assignee: true, workLogs: true, photos: { select: { id: true } } },
       });
 
       // Items created already inside the due-soon window should notify without waiting for cron.
@@ -296,7 +297,7 @@ router.patch("/todo-items/:itemId", async (req: AuthenticatedRequest, res, next)
     const item = await prisma.todoItem.update({
       where: { id: existing.id },
       data,
-      include: { assignee: true, workLogs: true },
+      include: { assignee: true, workLogs: true, photos: { select: { id: true } } },
     });
 
     if (shouldRecheckNotifications && item.dueDate && item.assigneeId && !item.isDone) {
@@ -517,6 +518,45 @@ router.delete(
       res.json({ ok: true });
     } catch (err) {
       next(err);
+    }
+  }
+);
+
+router.patch(
+  "/todo-items/:itemId/photos/reorder",
+  async (req: AuthenticatedRequest, res, next) => {
+    try {
+      const item = await getTodoItemForUser(req.params.itemId, req.user!.userId);
+      const body = z
+        .object({
+          photoIds: z.array(z.string().uuid()),
+        })
+        .parse(req.body);
+
+      await Promise.all(
+        body.photoIds.map((photoId, index) =>
+          prisma.todoItemPhoto.updateMany({
+            where: { id: photoId, todoItemId: item.id },
+            data: { sortOrder: index },
+          })
+        )
+      );
+
+      const photos = await prisma.todoItemPhoto.findMany({
+        where: { todoItemId: item.id },
+        orderBy: { sortOrder: "asc" },
+      });
+
+      res.json({
+        photos: photos.map((photo) => ({
+          id: photo.id,
+          imageUrl: photo.imageUrl,
+          caption: photo.caption,
+          sortOrder: photo.sortOrder,
+        })),
+      });
+    } catch (err) {
+      next(err instanceof z.ZodError ? new AppError(400, "Invalid input", err.flatten()) : err);
     }
   }
 );
