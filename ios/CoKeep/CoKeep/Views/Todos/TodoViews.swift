@@ -240,6 +240,15 @@ struct TodoItemRow: View {
                     if item.hasUnreadAlert == true {
                         AlertDotView()
                     }
+                    if let photoCount = item.photoCount, photoCount > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "photo")
+                                .font(.caption2)
+                            Text("\(photoCount)")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(Theme.accent.opacity(0.8))
+                    }
                 }
                 HStack(spacing: 8) {
                     if let due = item.dueDate {
@@ -416,6 +425,8 @@ struct TodoItemDetailView: View {
     @State private var members: [ObjectMember] = []
     @State private var confirmDelete = false
     @State private var deleting = false
+    @State private var editingPhotos = false
+    @State private var reorderingPhotos = false
 
     var body: some View {
         ZStack {
@@ -487,6 +498,15 @@ struct TodoItemDetailView: View {
                                     Label(L10n.string("todos.photos"), systemImage: "photo")
                                         .font(.headline)
                                     Spacer()
+                                    if photos.count > 1 {
+                                        Button {
+                                            editingPhotos.toggle()
+                                        } label: {
+                                            Text(editingPhotos ? L10n.string("common.done") : L10n.string("common.edit"))
+                                                .font(.subheadline)
+                                                .foregroundStyle(Theme.accent)
+                                        }
+                                    }
                                     Button {
                                         showAddPhoto = true
                                     } label: {
@@ -495,20 +515,33 @@ struct TodoItemDetailView: View {
                                     }
                                 }
                                 
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 10) {
-                                        ForEach(photos) { photo in
-                                            Button {
-                                                selectedPhoto = photo
-                                            } label: {
-                                                CachedRemoteImage(url: URL(string: photo.imageUrl)) { image in
-                                                    image.resizable().scaledToFill()
-                                                } placeholder: {
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Theme.cardFill)
+                                if editingPhotos && photos.count > 1 {
+                                    PhotoReorderView(
+                                        photos: photos,
+                                        itemId: itemId,
+                                        onReorder: {
+                                            Task {
+                                                await load()
+                                                onChange()
+                                            }
+                                        }
+                                    )
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 10) {
+                                            ForEach(photos) { photo in
+                                                Button {
+                                                    selectedPhoto = photo
+                                                } label: {
+                                                    CachedRemoteImage(url: URL(string: photo.imageUrl)) { image in
+                                                        image.resizable().scaledToFill()
+                                                    } placeholder: {
+                                                        RoundedRectangle(cornerRadius: 12)
+                                                            .fill(Theme.cardFill)
+                                                    }
+                                                    .frame(width: 100, height: 100)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 12))
                                                 }
-                                                .frame(width: 100, height: 100)
-                                                .clipShape(RoundedRectangle(cornerRadius: 12))
                                             }
                                         }
                                     }
@@ -1144,6 +1177,7 @@ struct AddTodoPhotoView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedItem: PhotosPickerItem?
+    @State private var previewImage: UIImage?
     @State private var caption = ""
     @State private var uploading = false
     @State private var error: String?
@@ -1154,8 +1188,24 @@ struct AddTodoPhotoView: View {
                 PhotosPicker(selection: $selectedItem, matching: .images) {
                     Label(L10n.string("todos.addPhoto"), systemImage: "photo.on.rectangle")
                 }
+                .onChange(of: selectedItem) { _, newItem in
+                    Task {
+                        if let newItem {
+                            await loadPreview(from: newItem)
+                        } else {
+                            previewImage = nil
+                        }
+                    }
+                }
                 
-                if selectedItem != nil {
+                if let previewImage {
+                    Section {
+                        Image(uiImage: previewImage)
+                            .resizable()
+                            .scaledToFit()
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    
                     TextField(L10n.string("todos.photoCaption"), text: $caption, axis: .vertical)
                         .lineLimit(2...4)
                 }
@@ -1181,6 +1231,15 @@ struct AddTodoPhotoView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func loadPreview(from item: PhotosPickerItem) async {
+        do {
+            let jpegData = try await item.jpegDataForUpload()
+            previewImage = UIImage(data: jpegData)
+        } catch {
+            previewImage = nil
         }
     }
 
@@ -1284,6 +1343,123 @@ struct TodoPhotoDetailView: View {
             onDone()
             dismiss()
         } catch {}
+    }
+}
+
+struct PhotoReorderView: View {
+    let photos: [TodoItemPhoto]
+    let itemId: String
+    var onReorder: () -> Void
+    
+    @State private var reorderedPhotos: [TodoItemPhoto]
+    @State private var reordering = false
+    @State private var draggedPhoto: TodoItemPhoto?
+    
+    init(photos: [TodoItemPhoto], itemId: String, onReorder: @escaping () -> Void) {
+        self.photos = photos
+        self.itemId = itemId
+        self.onReorder = onReorder
+        self._reorderedPhotos = State(initialValue: photos)
+    }
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(reorderedPhotos) { photo in
+                HStack(spacing: 12) {
+                    Image(systemName: "line.3.horizontal")
+                        .foregroundStyle(Theme.muted)
+                        .font(.title3)
+                    
+                    CachedRemoteImage(url: URL(string: photo.imageUrl)) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Theme.cardFill)
+                    }
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
+                    if let caption = photo.caption, !caption.isEmpty {
+                        Text(caption)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.ink)
+                            .lineLimit(2)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 12).fill(Theme.cardFill))
+                .opacity(draggedPhoto?.id == photo.id ? 0.5 : 1)
+                .onDrag {
+                    draggedPhoto = photo
+                    return NSItemProvider(object: photo.id as NSString)
+                }
+                .onDrop(of: [.text], delegate: PhotoDropDelegate(
+                    photo: photo,
+                    photos: $reorderedPhotos,
+                    draggedPhoto: $draggedPhoto
+                ))
+            }
+            
+            if reordering {
+                ProgressView()
+                    .padding()
+            } else {
+                Button {
+                    Task { await saveOrder() }
+                } label: {
+                    Label(L10n.string("common.save"), systemImage: "checkmark")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(reorderedPhotos == photos)
+            }
+        }
+    }
+    
+    private func saveOrder() async {
+        guard !reordering else { return }
+        reordering = true
+        defer { reordering = false }
+        
+        struct Body: Encodable {
+            let photoIds: [String]
+        }
+        struct Resp: Codable {
+            let photos: [TodoItemPhoto]
+        }
+        do {
+            let _: Resp = try await APIClient.shared.request(
+                "PATCH",
+                path: "api/todo-items/\(itemId)/photos/reorder",
+                body: Body(photoIds: reorderedPhotos.map { $0.id })
+            )
+            onReorder()
+        } catch {}
+    }
+}
+
+struct PhotoDropDelegate: DropDelegate {
+    let photo: TodoItemPhoto
+    @Binding var photos: [TodoItemPhoto]
+    @Binding var draggedPhoto: TodoItemPhoto?
+    
+    func performDrop(info: DropInfo) -> Bool {
+        draggedPhoto = nil
+        return true
+    }
+    
+    func dropEntered(info: DropInfo) {
+        guard let draggedPhoto = draggedPhoto,
+              draggedPhoto.id != photo.id,
+              let fromIndex = photos.firstIndex(where: { $0.id == draggedPhoto.id }),
+              let toIndex = photos.firstIndex(where: { $0.id == photo.id }) else {
+            return
+        }
+        
+        withAnimation {
+            photos.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
     }
 }
 

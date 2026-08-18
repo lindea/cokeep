@@ -28,9 +28,11 @@ export function serializeTodoItem(
       avatarUrl: string | null;
     } | null;
     workLogs?: WorkLogLike[];
+    photos?: { id: string }[];
   }
 ) {
   const totalMinutes = item.workLogs ? totalWorkMinutes(item.workLogs) : undefined;
+  const photoCount = item.photos?.length ?? 0;
   return {
     id: item.id,
     listId: item.listId,
@@ -52,6 +54,7 @@ export function serializeTodoItem(
     completedAt: item.completedAt,
     completedById: item.completedById,
     totalWorkMinutes: totalMinutes ?? 0,
+    photoCount,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   };
