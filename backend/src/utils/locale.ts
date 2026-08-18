@@ -25,7 +25,7 @@ export function invitePushCopy(
   }
   return {
     title: "CoKeep",
-    body: `${inviterName} invited you to join “${objectName}”`,
+    body: `${inviterName} invited you to join "${objectName}"`,
   };
 }
 
@@ -42,7 +42,7 @@ export function todoDueSoonPushCopy(
   }
   return {
     title: "CoKeep",
-    body: `“${itemName}” on ${objectName} is due within a week`,
+    body: `"${itemName}" on ${objectName} is due within a week`,
   };
 }
 
@@ -59,6 +59,24 @@ export function todoOverduePushCopy(
   }
   return {
     title: "CoKeep",
-    body: `“${itemName}” on ${objectName} is overdue`,
+    body: `"${itemName}" on ${objectName} is overdue`,
+  };
+}
+
+export function todoAssignedPushCopy(
+  lang: AppLang,
+  assignerName: string,
+  itemName: string,
+  objectName: string
+): PushCopy {
+  if (lang === "nb") {
+    return {
+      title: "CoKeep",
+      body: `${assignerName} har satt deg som ansvarlig for «${itemName}» på ${objectName}`,
+    };
+  }
+  return {
+    title: "CoKeep",
+    body: `${assignerName} assigned you to "${itemName}" on ${objectName}`,
   };
 }

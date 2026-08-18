@@ -49,6 +49,7 @@ enum NotificationType {
   INVITE
   TODO_DUE_SOON
   TODO_OVERDUE
+  TODO_ASSIGNED
   GENERAL
 }
 

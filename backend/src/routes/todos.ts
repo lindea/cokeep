@@ -8,6 +8,8 @@ import { getTodoItemForUser, requireObjectMember } from "../services/access";
 import { serializeTodoItem, totalWorkMinutes } from "../services/todoSerializer";
 import { minutesBetween, publicUser } from "../utils/helpers";
 import { getUnreadAlertSummary } from "../services/badge";
+import { notifyUser } from "../services/push";
+import { normalizeAppLang, todoAssignedPushCopy } from "../utils/locale";
 
 const router = Router();
 
@@ -299,6 +301,51 @@ router.patch("/todo-items/:itemId", async (req: AuthenticatedRequest, res, next)
       data,
       include: { assignee: true, workLogs: true, photos: { select: { id: true } } },
     });
+
+    // Send push notification when a user is newly assigned (by another user).
+    if (
+      body.assigneeId !== undefined &&
+      body.assigneeId !== existing.assigneeId &&
+      body.assigneeId !== null &&
+      body.assigneeId !== req.user!.userId
+    ) {
+      const [assigner, assignee, list] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: req.user!.userId },
+          select: { firstName: true, lastName: true },
+        }),
+        prisma.user.findUnique({
+          where: { id: body.assigneeId },
+          select: { preferredLanguage: true },
+        }),
+        prisma.todoList.findUnique({
+          where: { id: existing.listId },
+          include: { object: { select: { name: true } } },
+        }),
+      ]);
+
+      if (assigner && assignee && list) {
+        const assignerName = `${assigner.firstName} ${assigner.lastName}`;
+        const lang = normalizeAppLang(assignee.preferredLanguage);
+        const copy = todoAssignedPushCopy(
+          lang,
+          assignerName,
+          item.name,
+          list.object.name
+        );
+
+        await notifyUser(body.assigneeId, "TODO_ASSIGNED", {
+          title: copy.title,
+          body: copy.body,
+          data: {
+            type: "todo_assigned",
+            todoItemId: item.id,
+            listId: item.listId,
+            objectId: list.objectId,
+          },
+        });
+      }
+    }
 
     if (shouldRecheckNotifications && item.dueDate && item.assigneeId && !item.isDone) {
       scheduleDueNotifications();
